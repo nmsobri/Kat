@@ -40,5 +40,5 @@ fn main() {
 }
 
 fn say(greet) {
-    fmt.Print(what)
+    fmt.Print(greet)
 }
