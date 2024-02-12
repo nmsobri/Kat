@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 	"kat/lexer"
-	"kat/token"
+	"kat/parser"
 	"log"
 	"os"
 )
@@ -12,16 +12,11 @@ import (
 func main() {
 	source := ReadFile("./doc/main.kat")
 
-	lex := lexer.New(source)
+	l := lexer.New(source)
+	p := parser.New(l)
+	program := p.ParseProgram()
 
-	currentToken := lex.Token()
-
-	for currentToken.Type != token.EOF {
-		fmt.Println(currentToken)
-		currentToken = lex.Token()
-	}
-
-	fmt.Println(currentToken)
+	fmt.Println(program)
 }
 
 func ReadFile(fileName string) []byte {
