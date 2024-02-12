@@ -136,13 +136,13 @@ func (l *Lexer) Token() token.Token {
 			t = l.MakeToken(col, string(dig), token.DIGIT)
 		} else if l.IsChar(ch) {
 			col := l.Col
-			unknown := l.MakeUnknown()
+			unknown := l.MakeIdentifier()
 			symbol := string(unknown)
 			t = l.MakeToken(col, symbol, token.Symbol(symbol))
 		} else {
 			col := l.Col
-			unknown := l.MakeUnknown()
-			t = l.MakeToken(col, string(unknown), token.UNKNOWN)
+			invalid := l.MakeInvalid()
+			t = l.MakeToken(col, string(invalid), token.INVALID)
 		}
 	}
 
@@ -175,7 +175,7 @@ func (l *Lexer) IsChar(ch byte) bool {
 }
 
 func (l *Lexer) IsDigit(ch byte) bool {
-	return ch >= '0' && ch <= '9'
+	return ch >= '0' && ch <= '9' || ch == '.'
 }
 
 func (l *Lexer) IsAlphaNum(ch byte) bool {
@@ -186,8 +186,8 @@ func (l *Lexer) IsWhitespace(ch byte) bool {
 	return ch == ' ' || ch == '\t' || ch == '\r'
 }
 
-func (l *Lexer) IsQuote() bool {
-	return l.Char() == '"'
+func (l *Lexer) IsEndOfString() bool {
+	return l.Char() == '"' || l.Char() == 0
 }
 
 func (l *Lexer) SkipWhitespace() {
@@ -197,16 +197,15 @@ func (l *Lexer) SkipWhitespace() {
 }
 
 func (l *Lexer) MakeString() []byte {
-	l.AdvanceChar()
 	start := l.Col
+	l.AdvanceChar()
 
-	for !l.IsQuote() {
+	for !l.IsEndOfString() {
 		l.AdvanceChar()
 	}
 
 	end := l.Col
-
-	return l.Input[start:end]
+	return l.Input[start : end+1]
 }
 
 func (l *Lexer) MakeDigit() []byte {
@@ -223,11 +222,23 @@ func (l *Lexer) MakeDigit() []byte {
 	return l.Input[start:end]
 }
 
-func (l *Lexer) MakeUnknown() []byte {
+func (l *Lexer) MakeIdentifier() []byte {
 	start := l.Col
 	l.AdvanceChar()
 
 	for l.IsAlphaNum(l.Char()) {
+		l.AdvanceChar()
+	}
+
+	end := l.Col
+	l.Col--
+	return l.Input[start:end]
+}
+
+func (l *Lexer) MakeInvalid() []byte {
+	start := l.Col
+
+	for l.Char() != 0 && !l.IsWhitespace(l.Char()) {
 		l.AdvanceChar()
 	}
 

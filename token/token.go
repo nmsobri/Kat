@@ -65,7 +65,7 @@ const (
 	// Special
 	EOL     = "EOL"     // End of line
 	EOF     = "EOF"     // End of file
-	UNKNOWN = "UNKNOWN" // End of file
+	INVALID = "INVALID" // End of file
 )
 
 func Symbol(key string) TokenType {
