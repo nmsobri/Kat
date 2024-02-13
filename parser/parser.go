@@ -37,6 +37,13 @@ func (p *Parser) ParseProgram() ast.NodeProgram {
 }
 
 func (p *Parser) ParseStatement() ast.Node {
+	if p.CCurrentToken().Type == token.DIGIT {
+		return p.ParseNodeDigit()
+	}
+
+	return p.ParseNodeNil()
+}
+func (p *Parser) ParseNodeDigit() ast.NodeInteger {
 	val, e := strconv.ParseInt(p.CCurrentToken().Value, 10, 64)
 
 	if e != nil {
@@ -46,5 +53,12 @@ func (p *Parser) ParseStatement() ast.Node {
 	return ast.NodeInteger{
 		Token: p.CCurrentToken(),
 		Value: val,
+	}
+}
+
+func (p *Parser) ParseNodeNil() ast.NodeInteger {
+	return ast.NodeInteger{
+		Token: p.CCurrentToken(),
+		Value: 999,
 	}
 }
