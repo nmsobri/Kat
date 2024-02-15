@@ -13,7 +13,7 @@ type Token struct {
 
 func (t Token) String() string {
 	return fmt.Sprintf(
-		"Token{ Line: %d, Col: %d, Value: `%s`, Type: %s }\n",
+		"NextToken{ Line: %d, Col: %d, Value: `%s`, Type: %s }\n",
 		t.Row, t.Col, t.Value, t.Type,
 	)
 }
@@ -24,7 +24,7 @@ const (
 	MINUS     = "MINUS"     // -
 	MULTIPLY  = "MULTIPLY " // *
 	DIVIDE    = "DIVIDE"    // /
-	MODULE    = "MODULO"    // %
+	MODULO    = "MODULO"    // %
 	EQUAL     = "EQUAL"     // =
 	LESS      = "LESS"      // <
 	GREATER   = "GREATER"   // >

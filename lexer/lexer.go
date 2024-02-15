@@ -24,7 +24,7 @@ func (l *Lexer) MakeToken(col int, val string, tokenType token.TokenType) token.
 	}
 }
 
-func (l *Lexer) Token() token.Token {
+func (l *Lexer) NextToken() token.Token {
 	l.SkipWhitespace()
 
 	ch := l.Char()
@@ -84,7 +84,7 @@ func (l *Lexer) Token() token.Token {
 		t = l.MakeToken(l.Col, string(ch), token.DIVIDE)
 
 	case '%':
-		t = l.MakeToken(l.Col, string(ch), token.MODULE)
+		t = l.MakeToken(l.Col, string(ch), token.MODULO)
 
 	case '[':
 		t = l.MakeToken(l.Col, string(ch), token.LBRACKET)
