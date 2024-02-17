@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"kat/ast"
 	"kat/lexer"
 	"kat/token"
@@ -8,40 +9,43 @@ import (
 	"strconv"
 )
 
-type PrefixParseFn func() ast.Node
-type InfixParseFn func(node ast.Node) ast.Node
+type PrefixParselet func() ast.Node
+type InfixParselet func(left ast.Node) ast.Node
 
 type Parser struct {
-	Lex       *lexer.Lexer
-	Token     token.Token
-	PrefixFns map[token.TokenType]PrefixParseFn
-	InfixFns  map[token.TokenType]InfixParseFn
+	Lex             *lexer.Lexer
+	Token           token.Token
+	NextToken       token.Token
+	PrefixFunctions map[token.TokenType]PrefixParselet
+	InfixFunctions  map[token.TokenType]InfixParselet
 }
 
 func New(lex *lexer.Lexer) *Parser {
 	p := &Parser{
-		Lex:       lex,
-		PrefixFns: make(map[token.TokenType]PrefixParseFn),
-		InfixFns:  make(map[token.TokenType]InfixParseFn),
+		Lex:             lex,
+		PrefixFunctions: make(map[token.TokenType]PrefixParselet),
+		InfixFunctions:  make(map[token.TokenType]InfixParselet),
 	}
 
-	// Prefix parsing function
-	p.PrefixFns[token.DIGIT] = p.ParseNodeDigit
+	// Register Prefixes
+	p.PrefixFunctions[token.DIGIT] = p.ParseNodeDigit
 
-	// Infix parsing function
-	p.InfixFns[token.PLUS] = p.ParseInfix
-	p.InfixFns[token.MINUS] = p.ParseInfix
-	p.InfixFns[token.MULTIPLY] = p.ParseInfix
-	p.InfixFns[token.DIVIDE] = p.ParseInfix
-	p.InfixFns[token.MODULO] = p.ParseInfix
+	// Register Infixes
+	p.InfixFunctions[token.PLUS] = p.ParseInfix
+	p.InfixFunctions[token.MINUS] = p.ParseInfix
+	p.InfixFunctions[token.MULTIPLY] = p.ParseInfix
+	p.InfixFunctions[token.DIVIDE] = p.ParseInfix
+	p.InfixFunctions[token.MODULO] = p.ParseInfix
 
-	p.NextToken() // prime the token
+	p.NextToken = p.Lex.NextToken()
 
 	return p
 }
 
-func (p *Parser) NextToken() token.Token {
-	p.Token = p.Lex.NextToken()
+func (p *Parser) ConsumeToken() token.Token {
+	//p.Token = p.Lex.ConsumeToken()
+	p.Token = p.NextToken
+	p.NextToken = p.Lex.NextToken()
 	return p.Token
 }
 
@@ -49,39 +53,50 @@ func (p *Parser) CurrentToken() token.Token {
 	return p.Token
 }
 
+func (p *Parser) PeekToken() token.Token {
+	return p.NextToken
+}
+
+func (*Parser) GetOperatorPrecedence(tok token.Token) int {
+	return token.Precedence(tok)
+}
+
 func (p *Parser) ParseProgram() ast.NodeProgram {
 	program := ast.NodeProgram{}
 
 	for p.CurrentToken().Type != token.EOF {
 		if p.CurrentToken().Type == token.EOL {
-			p.NextToken()
+			p.ConsumeToken()
 			continue
 		}
 
-		program.Body = append(program.Body, p.ParseStatement())
+		program.Body = append(program.Body, p.ParseExpression(0))
 	}
 
 	return program
 }
 
-func (p *Parser) ParseStatement() ast.Node {
-	prefixFn, ok := p.PrefixFns[p.CurrentToken().Type]
+func (p *Parser) ParseExpression(currentPrecedence int) ast.Node {
+	p.ConsumeToken()
+	prefixFunction, ok := p.PrefixFunctions[p.CurrentToken().Type]
 
 	if !ok {
-		log.Fatalf("PrefixFns parsing function not found for token: %s", p.CurrentToken().Type)
+		log.Fatalf("Could not parse token: %s", p.CurrentToken().Type)
 	}
 
-	left := prefixFn()
-	p.NextToken()
+	left := prefixFunction()
+	fmt.Println(p.PeekToken(), p.GetOperatorPrecedence(p.PeekToken()))
 
-	for p.CurrentToken().Type != token.EOL && p.CurrentToken().Type != token.EOF {
-		infix, ok := p.InfixFns[p.CurrentToken().Type]
+	for p.PeekToken().Type != token.EOL && p.GetOperatorPrecedence(p.PeekToken()) > currentPrecedence {
+		p.ConsumeToken() // consume the infix operator
+
+		infixFunction, ok := p.InfixFunctions[p.CurrentToken().Type]
 
 		if !ok {
-			log.Fatalf("InfixFns parsing function not found for token: %s", p.CurrentToken().Type)
+			log.Fatalf("Could not parse token: %s", p.CurrentToken().Type)
 		}
 
-		left = infix(left)
+		left = infixFunction(left)
 	}
 
 	return left
@@ -109,9 +124,8 @@ func (p *Parser) ParseNodeNil() ast.NodeInteger {
 
 func (p *Parser) ParseInfix(left ast.Node) ast.Node {
 	currentToken := p.CurrentToken()
-	p.NextToken()
 
-	right := p.ParseStatement()
+	right := p.ParseExpression(p.GetOperatorPrecedence(currentToken))
 
 	return ast.NodeInfix{
 		Token:    currentToken,

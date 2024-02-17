@@ -6,19 +6,22 @@ import (
 	"strings"
 )
 
-const pad = "    "
+const Pad = "    "
 
 type Node interface {
 	String(depth int, isLast bool) string
 }
 
+// #######################################################
+// ##################### Node Program ####################
+// #######################################################
 type NodeProgram struct {
 	Body []Node
 }
 
 func (np NodeProgram) String(depth int, isLast bool) string {
 	sb := strings.Builder{}
-	padding := strings.Repeat(pad, depth)
+	padding := strings.Repeat(Pad, depth)
 	indent := fmt.Sprintf("%s├── ", padding)
 
 	sb.WriteString("NodeProgram")
@@ -38,7 +41,8 @@ func (np NodeProgram) String(depth int, isLast bool) string {
 }
 
 // #######################################################
-
+// ##################### Node Integer ####################
+// #######################################################
 type NodeInteger struct {
 	Token token.Token
 	Value int64
@@ -49,7 +53,8 @@ func (ni NodeInteger) String(depth int, isLast bool) string {
 }
 
 // #######################################################
-
+// ###################### Node Infix #####################
+// #######################################################
 type NodeInfix struct {
 	Token    token.Token
 	Left     Node
@@ -59,7 +64,7 @@ type NodeInfix struct {
 
 func (ni NodeInfix) String(depth int, isLast bool) string {
 	sb := strings.Builder{}
-	padding := strings.Repeat(pad, depth)
+	padding := strings.Repeat(Pad, depth)
 	format := "│"
 
 	if isLast {
@@ -73,5 +78,4 @@ func (ni NodeInfix) String(depth int, isLast bool) string {
 	sb.WriteString(ni.Right.String(depth+1, isLast))
 
 	return sb.String()
-
 }

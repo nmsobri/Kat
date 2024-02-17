@@ -7,12 +7,12 @@ import (
 type Lexer struct {
 	Col    int
 	Line   int
-	Input  []byte
 	Offset int
+	Input  []byte
 }
 
 func New(input []byte) *Lexer {
-	return &Lexer{Input: input, Line: 0, Col: 0}
+	return &Lexer{Col: -1, Line: 0, Offset: 0, Input: input}
 }
 
 func (l *Lexer) MakeToken(col int, val string, tokenType token.TokenType) token.Token {
@@ -25,6 +25,7 @@ func (l *Lexer) MakeToken(col int, val string, tokenType token.TokenType) token.
 }
 
 func (l *Lexer) NextToken() token.Token {
+	l.NextChar()
 	l.SkipWhitespace()
 
 	ch := l.Char()
@@ -35,7 +36,7 @@ func (l *Lexer) NextToken() token.Token {
 	case '+':
 		if l.PeekChar() == '+' {
 			col := l.Col
-			l.AdvanceChar()
+			l.NextChar()
 			t = l.MakeToken(col, string(l.Input[col:col+2]), token.PLUSPLUS)
 		} else {
 			t = l.MakeToken(l.Col, string(ch), token.PLUS)
@@ -44,7 +45,7 @@ func (l *Lexer) NextToken() token.Token {
 	case '-':
 		if l.PeekChar() == '-' {
 			col := l.Col
-			l.AdvanceChar()
+			l.NextChar()
 			t = l.MakeToken(col, string(l.Input[col:col+2]), token.MINUSMINUS)
 		} else {
 			t = l.MakeToken(l.Col, string(ch), token.MINUS)
@@ -53,7 +54,7 @@ func (l *Lexer) NextToken() token.Token {
 	case '=':
 		if l.PeekChar() == '=' {
 			col := l.Col
-			l.AdvanceChar()
+			l.NextChar()
 			t = l.MakeToken(col, string(l.Input[col:col+2]), token.EQUALEQUAL)
 		} else {
 			t = l.MakeToken(l.Col, string(ch), token.EQUAL)
@@ -62,7 +63,7 @@ func (l *Lexer) NextToken() token.Token {
 	case '<':
 		if l.PeekChar() == '=' {
 			col := l.Col
-			l.AdvanceChar()
+			l.NextChar()
 			t = l.MakeToken(col, string(l.Input[col:col+2]), token.LESSEQUAL)
 		} else {
 			t = l.MakeToken(l.Col, string(ch), token.LESS)
@@ -71,7 +72,7 @@ func (l *Lexer) NextToken() token.Token {
 	case '>':
 		if l.PeekChar() == '=' {
 			col := l.Col
-			l.AdvanceChar()
+			l.NextChar()
 			t = l.MakeToken(col, string(l.Input[col:col+2]), token.GREATEREQUAL)
 		} else {
 			t = l.MakeToken(l.Col, string(ch), token.GREATER)
@@ -146,7 +147,6 @@ func (l *Lexer) NextToken() token.Token {
 		}
 	}
 
-	l.AdvanceChar()
 	return t
 }
 
@@ -158,7 +158,7 @@ func (l *Lexer) Char() byte {
 	return 0
 }
 
-func (l *Lexer) AdvanceChar() {
+func (l *Lexer) NextChar() {
 	l.Col++
 }
 
@@ -192,16 +192,16 @@ func (l *Lexer) IsEndOfString() bool {
 
 func (l *Lexer) SkipWhitespace() {
 	for l.Col < len(l.Input) && l.IsWhitespace(l.Input[l.Col]) {
-		l.AdvanceChar()
+		l.NextChar()
 	}
 }
 
 func (l *Lexer) MakeString() []byte {
 	start := l.Col
-	l.AdvanceChar()
+	l.NextChar()
 
 	for !l.IsEndOfString() {
-		l.AdvanceChar()
+		l.NextChar()
 	}
 
 	end := l.Col
@@ -210,10 +210,10 @@ func (l *Lexer) MakeString() []byte {
 
 func (l *Lexer) MakeDigit() []byte {
 	start := l.Col
-	l.AdvanceChar()
+	l.NextChar()
 
 	for l.IsDigit(l.Char()) {
-		l.AdvanceChar()
+		l.NextChar()
 	}
 
 	end := l.Col
@@ -224,10 +224,10 @@ func (l *Lexer) MakeDigit() []byte {
 
 func (l *Lexer) MakeIdentifier() []byte {
 	start := l.Col
-	l.AdvanceChar()
+	l.NextChar()
 
 	for l.IsAlphaNum(l.Char()) {
-		l.AdvanceChar()
+		l.NextChar()
 	}
 
 	end := l.Col
@@ -239,7 +239,7 @@ func (l *Lexer) MakeInvalid() []byte {
 	start := l.Col
 
 	for l.Char() != 0 && !l.IsWhitespace(l.Char()) {
-		l.AdvanceChar()
+		l.NextChar()
 	}
 
 	end := l.Col

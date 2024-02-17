@@ -1,6 +1,8 @@
 package token
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type TokenType string
 
@@ -13,8 +15,8 @@ type Token struct {
 
 func (t Token) String() string {
 	return fmt.Sprintf(
-		"NextToken{ Line: %d, Col: %d, Value: `%s`, Type: %s }\n",
-		t.Row, t.Col, t.Value, t.Type,
+		"Token{ Line: %d, Col: %d, Type: %s, Value: `%s` }\n",
+		t.Row, t.Col, t.Type, t.Value,
 	)
 }
 
@@ -32,7 +34,6 @@ const (
 	RBRACKET  = "RBRACKET"  // ]
 	LBRACE    = "LBRACE"    // {
 	RBRACE    = "RBRACE"    // }
-	QUOTE     = "QUOTE"     // "
 	COLON     = "COLON"     // :
 	LPAREN    = "LPAREN"    // (
 	RPAREN    = "RPAREN"    // )
@@ -45,7 +46,7 @@ const (
 	MINUSMINUS   = "MINUSMINUS"   // --
 	EQUALEQUAL   = "EQUALEQUAL"   // ==
 	GREATEREQUAL = "GREATEREQUAL" // >=
-	LESSEQUAL    = "LESSQUAL"     // <=
+	LESSEQUAL    = "LESSEQUAL"    // <=
 
 	// Literal
 	STRING = "STRING"
@@ -87,4 +88,22 @@ func Symbol(key string) TokenType {
 	}
 
 	return IDENTIFIER
+}
+
+func Precedence(tok Token) int {
+	precedences := map[TokenType]int{
+		PLUS:     1,
+		MINUS:    1,
+		MULTIPLY: 2,
+		DIVIDE:   2,
+		MODULO:   2,
+	}
+
+	precedence, ok := precedences[tok.Type]
+
+	if ok {
+		return precedence
+	}
+
+	return 0
 }
