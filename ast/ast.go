@@ -11,7 +11,6 @@ const Pad = "   "
 type Node interface {
 	Node(depth int) string
 	String() string
-	HasChild() bool
 }
 
 // #######################################################
@@ -43,10 +42,6 @@ func (np NodeProgram) String() string {
 	return "NodeProgram"
 }
 
-func (np NodeProgram) HasChild() bool {
-	return true
-}
-
 // #######################################################
 // ##################### Node Integer ####################
 // #######################################################
@@ -63,10 +58,6 @@ func (ni NodeInteger) String() string {
 	return "NodeInteger"
 }
 
-func (ni NodeInteger) HasChild() bool {
-	return false
-}
-
 // #######################################################
 // ##################### Node Operator ###################
 // #######################################################
@@ -81,19 +72,15 @@ func (no NodeOperator) Node(depth int) string {
 	sb := strings.Builder{}
 	sb.WriteString(fmt.Sprintf("NodeOperator(%s, %d)", no.Operator, depth))
 
-	separator := fmt.Sprintf("│%s", Pad)
-	format := strings.Repeat(separator, depth)
+	format := fmt.Sprintf("│%s", Pad)
+	separator := strings.Repeat(format, depth)
 
-	sb.WriteString(fmt.Sprintf("\n%s├── %s", format, no.Left.Node(depth+1)))
-	sb.WriteString(fmt.Sprintf("\n%s└── %s", format, no.Right.Node(depth+1)))
+	sb.WriteString(fmt.Sprintf("\n%s├── %s", separator, no.Left.Node(depth+1)))
+	sb.WriteString(fmt.Sprintf("\n%s└── %s", separator, no.Right.Node(depth+1)))
 
 	return sb.String()
 }
 
 func (no NodeOperator) String() string {
 	return "NodeOperator"
-}
-
-func (no NodeOperator) HasChild() bool {
-	return true
 }
