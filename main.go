@@ -16,7 +16,7 @@ func main() {
 	p := parser.New(l)
 	program := p.ParseProgram()
 
-	fmt.Println(program.String(0, false))
+	fmt.Println(program.Node(0))
 }
 
 func ReadFile(fileName string) []byte {

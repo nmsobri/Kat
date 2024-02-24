@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"kat/ast"
 	"kat/lexer"
 	"kat/token"
@@ -31,11 +30,11 @@ func New(lex *lexer.Lexer) *Parser {
 	p.PrefixFunctions[token.DIGIT] = p.ParseNodeDigit
 
 	// Register Infixes
-	p.InfixFunctions[token.PLUS] = p.ParseInfix
-	p.InfixFunctions[token.MINUS] = p.ParseInfix
-	p.InfixFunctions[token.MULTIPLY] = p.ParseInfix
-	p.InfixFunctions[token.DIVIDE] = p.ParseInfix
-	p.InfixFunctions[token.MODULO] = p.ParseInfix
+	p.InfixFunctions[token.PLUS] = p.ParseNodeInfix
+	p.InfixFunctions[token.MINUS] = p.ParseNodeInfix
+	p.InfixFunctions[token.MULTIPLY] = p.ParseNodeInfix
+	p.InfixFunctions[token.DIVIDE] = p.ParseNodeInfix
+	p.InfixFunctions[token.MODULO] = p.ParseNodeInfix
 
 	p.NextToken = p.Lex.NextToken()
 
@@ -43,7 +42,6 @@ func New(lex *lexer.Lexer) *Parser {
 }
 
 func (p *Parser) ConsumeToken() token.Token {
-	//p.Token = p.Lex.ConsumeToken()
 	p.Token = p.NextToken
 	p.NextToken = p.Lex.NextToken()
 	return p.Token
@@ -65,12 +63,8 @@ func (p *Parser) ParseProgram() ast.NodeProgram {
 	program := ast.NodeProgram{}
 
 	for p.CurrentToken().Type != token.EOF {
-		if p.CurrentToken().Type == token.EOL {
-			p.ConsumeToken()
-			continue
-		}
-
 		program.Body = append(program.Body, p.ParseExpression(0))
+		p.ConsumeToken() // consume EOL
 	}
 
 	return program
@@ -85,7 +79,6 @@ func (p *Parser) ParseExpression(currentPrecedence int) ast.Node {
 	}
 
 	left := prefixFunction()
-	fmt.Println(p.PeekToken(), p.GetOperatorPrecedence(p.PeekToken()))
 
 	for p.PeekToken().Type != token.EOL && p.GetOperatorPrecedence(p.PeekToken()) > currentPrecedence {
 		p.ConsumeToken() // consume the infix operator
@@ -122,12 +115,12 @@ func (p *Parser) ParseNodeNil() ast.NodeInteger {
 	}
 }
 
-func (p *Parser) ParseInfix(left ast.Node) ast.Node {
+func (p *Parser) ParseNodeInfix(left ast.Node) ast.Node {
 	currentToken := p.CurrentToken()
 
 	right := p.ParseExpression(p.GetOperatorPrecedence(currentToken))
 
-	return ast.NodeInfix{
+	return ast.NodeOperator{
 		Token:    currentToken,
 		Left:     left,
 		Right:    right,

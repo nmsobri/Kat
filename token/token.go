@@ -15,7 +15,7 @@ type Token struct {
 
 func (t Token) String() string {
 	return fmt.Sprintf(
-		"Token{ Line: %d, Col: %d, Type: %s, Value: `%s` }\n",
+		"Token{ Line: %d, Col: %d, Type: %s, Value: `%s` }",
 		t.Row, t.Col, t.Type, t.Value,
 	)
 }
