@@ -120,7 +120,7 @@ func (p *Parser) ParseNodeInfix(left ast.Node) ast.Node {
 
 	right := p.ParseExpression(p.GetOperatorPrecedence(currentToken))
 
-	return ast.NodeOperator{
+	return ast.NodeBinaryExpr{
 		Token:    currentToken,
 		Left:     left,
 		Right:    right,

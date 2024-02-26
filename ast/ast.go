@@ -6,10 +6,11 @@ import (
 	"strings"
 )
 
-const Pad = "   "
+const EmptyPad = "    "
+const PipePad = "│   "
 
 type Node interface {
-	Node(depth int) string
+	Node(indent string) string
 	String() string
 }
 
@@ -20,19 +21,23 @@ type NodeProgram struct {
 	Body []Node
 }
 
-func (np NodeProgram) Node(depth int) string {
+func (np NodeProgram) Node(indent string) string {
 	sb := strings.Builder{}
 	sb.WriteString("NodeProgram")
 
-	padding := strings.Repeat(Pad, depth)
-	separator := fmt.Sprintf("%s├── ", padding)
+	separator := fmt.Sprintf("%s├── ", indent)
 
-	for i, node := range np.Body {
+	for i, stmt := range np.Body {
+		_indent := indent
+
 		if i == len(np.Body)-1 {
-			separator = fmt.Sprintf("%s└── ", padding)
+			separator = fmt.Sprintf("%s└── ", _indent)
+			_indent += EmptyPad
+		} else {
+			_indent += PipePad
 		}
 
-		sb.WriteString(fmt.Sprintf("\n%s%s", separator, node.Node(depth+1)))
+		sb.WriteString(fmt.Sprintf("\n%s%s", separator, stmt.Node(_indent)))
 	}
 
 	return sb.String()
@@ -50,8 +55,8 @@ type NodeInteger struct {
 	Value int64
 }
 
-func (ni NodeInteger) Node(depth int) string {
-	return fmt.Sprintf("NodeInteger (%d, %d)", ni.Value, depth)
+func (ni NodeInteger) Node(indent string) string {
+	return fmt.Sprintf("NodeInteger (%d)", ni.Value)
 }
 
 func (ni NodeInteger) String() string {
@@ -61,26 +66,27 @@ func (ni NodeInteger) String() string {
 // #######################################################
 // ##################### Node Operator ###################
 // #######################################################
-type NodeOperator struct {
+type NodeBinaryExpr struct {
 	Token    token.Token
 	Left     Node
 	Right    Node
 	Operator string
 }
 
-func (no NodeOperator) Node(depth int) string {
+func (nbe NodeBinaryExpr) Node(indent string) string {
 	sb := strings.Builder{}
-	sb.WriteString(fmt.Sprintf("NodeOperator(%s, %d)", no.Operator, depth))
+	sb.WriteString(fmt.Sprintf("NodeBinaryExpr(%s)", nbe.Operator))
 
-	format := fmt.Sprintf("│%s", Pad)
-	separator := strings.Repeat(format, depth)
+	_indent := indent
+	leftIndent := indent + PipePad
+	rightIndent := indent + EmptyPad
 
-	sb.WriteString(fmt.Sprintf("\n%s├── %s", separator, no.Left.Node(depth+1)))
-	sb.WriteString(fmt.Sprintf("\n%s└── %s", separator, no.Right.Node(depth+1)))
+	sb.WriteString(fmt.Sprintf("\n%s├── %s", _indent, nbe.Left.Node(leftIndent)))
+	sb.WriteString(fmt.Sprintf("\n%s└── %s", _indent, nbe.Right.Node(rightIndent)))
 
 	return sb.String()
 }
 
-func (no NodeOperator) String() string {
-	return "NodeOperator"
+func (nbe NodeBinaryExpr) String() string {
+	return "NodeBinaryExpr"
 }
