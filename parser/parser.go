@@ -28,6 +28,10 @@ func New(lex *lexer.Lexer) *Parser {
 
 	// Register Prefixes
 	p.PrefixFunctions[token.DIGIT] = p.ParseNodeDigit
+	p.PrefixFunctions[token.TRUE] = p.ParseBoolean
+	p.PrefixFunctions[token.FALSE] = p.ParseBoolean
+	p.PrefixFunctions[token.MINUS] = p.ParseNodePrefix
+	p.PrefixFunctions[token.BANG] = p.ParseNodePrefix
 
 	// Register Infixes
 	p.InfixFunctions[token.PLUS] = p.ParseNodeInfix
@@ -56,7 +60,7 @@ func (p *Parser) PeekToken() token.Token {
 }
 
 func (*Parser) GetOperatorPrecedence(tok token.Token) int {
-	return token.Precedence(tok)
+	return token.GetPrecedence(tok)
 }
 
 func (p *Parser) ParseProgram() ast.NodeProgram {
@@ -75,7 +79,7 @@ func (p *Parser) ParseExpression(currentPrecedence int) ast.Node {
 	prefixFunction, ok := p.PrefixFunctions[p.CurrentToken().Type]
 
 	if !ok {
-		log.Fatalf("Could not parse token: %s", p.CurrentToken().Type)
+		log.Fatalf("Could not parse token: %s, value: %s", p.CurrentToken().Type, p.CurrentToken().Value)
 	}
 
 	left := prefixFunction()
@@ -125,5 +129,34 @@ func (p *Parser) ParseNodeInfix(left ast.Node) ast.Node {
 		Left:     left,
 		Right:    right,
 		Operator: currentToken.Value,
+	}
+}
+
+func (p *Parser) ParseNodePrefix() ast.Node {
+	currentToken := p.CurrentToken() // the prefix
+
+	right := p.ParseExpression(token.Precedence.PREFIX)
+
+	if currentToken.Value == "-" {
+		currentToken.Type = token.NEGATE
+	}
+
+	return ast.NodePrefixExpr{
+		Token:    currentToken,
+		Operator: currentToken.Value,
+		Right:    right,
+	}
+}
+
+func (p *Parser) ParseBoolean() ast.Node {
+	val := true
+
+	if p.CurrentToken().Type == token.FALSE {
+		val = false
+	}
+
+	return ast.NodeBoolean{
+		Token: p.CurrentToken(),
+		Value: val,
 	}
 }

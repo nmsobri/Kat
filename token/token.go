@@ -4,6 +4,26 @@ import (
 	"fmt"
 )
 
+var Precedence = struct {
+	ASSIGNMENT  int
+	CONDITIONAL int
+	SUM         int
+	PRODUCT     int
+	EXPONENT    int
+	PREFIX      int
+	POSTFIX     int
+	CALL        int
+}{
+	ASSIGNMENT:  1,
+	CONDITIONAL: 2,
+	SUM:         3,
+	PRODUCT:     4,
+	EXPONENT:    5,
+	PREFIX:      6,
+	POSTFIX:     7,
+	CALL:        8,
+}
+
 type TokenType string
 
 type Token struct {
@@ -24,6 +44,8 @@ const (
 	// Single character
 	PLUS      = "PLUS"      // +
 	MINUS     = "MINUS"     // -
+	NEGATE    = "NEGATE"    // -
+	BANG      = "BANG"      // !
 	MULTIPLY  = "MULTIPLY " // *
 	DIVIDE    = "DIVIDE"    // /
 	MODULO    = "MODULO"    // %
@@ -53,6 +75,9 @@ const (
 	DIGIT  = "DIGIT"
 
 	// Keyword
+
+	TRUE       = "TRUE"       // true
+	FALSE      = "FALSE"      // false
 	LET        = "LET"        // let
 	IF         = "IF"         // if
 	ELSE       = "ELSE"       // else
@@ -79,6 +104,8 @@ func Symbol(key string) TokenType {
 		"import": IMPORT,
 		"struct": STRUCT,
 		"fn":     FUNCTION,
+		"true":   TRUE,
+		"false":  FALSE,
 	}
 
 	keyword, ok := keywords[key]
@@ -90,13 +117,15 @@ func Symbol(key string) TokenType {
 	return IDENTIFIER
 }
 
-func Precedence(tok Token) int {
+func GetPrecedence(tok Token) int {
 	precedences := map[TokenType]int{
-		PLUS:     1,
-		MINUS:    1,
-		MULTIPLY: 2,
-		DIVIDE:   2,
-		MODULO:   2,
+		PLUS:     Precedence.SUM,
+		MINUS:    Precedence.SUM,
+		MULTIPLY: Precedence.PRODUCT,
+		DIVIDE:   Precedence.PRODUCT,
+		MODULO:   Precedence.PRODUCT,
+		NEGATE:   Precedence.PREFIX,
+		BANG:     Precedence.PREFIX,
 	}
 
 	precedence, ok := precedences[tok.Type]

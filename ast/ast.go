@@ -48,6 +48,24 @@ func (np NodeProgram) String() string {
 }
 
 // #######################################################
+// ################### Node Boolean #####################
+// #######################################################
+type NodeBoolean struct {
+	Token token.Token
+	Value bool
+}
+
+func (nb NodeBoolean) Node(indent string) string {
+	sb := strings.Builder{}
+	sb.WriteString(fmt.Sprintf("NodeBoolean (%t)", nb.Value))
+	return sb.String()
+}
+
+func (nb NodeBoolean) String() string {
+	return "NodeBoolean"
+}
+
+// #######################################################
 // ##################### Node Integer ####################
 // #######################################################
 type NodeInteger struct {
@@ -75,7 +93,7 @@ type NodeBinaryExpr struct {
 
 func (nbe NodeBinaryExpr) Node(indent string) string {
 	sb := strings.Builder{}
-	sb.WriteString(fmt.Sprintf("NodeBinaryExpr(%s)", nbe.Operator))
+	sb.WriteString(fmt.Sprintf("NodeBinary(%s)", nbe.Operator))
 
 	_indent := indent
 	leftIndent := indent + PipePad
@@ -89,4 +107,29 @@ func (nbe NodeBinaryExpr) Node(indent string) string {
 
 func (nbe NodeBinaryExpr) String() string {
 	return "NodeBinaryExpr"
+}
+
+// #######################################################
+// ################## Node Prefix Expr ###################
+// #######################################################
+type NodePrefixExpr struct {
+	Token    token.Token
+	Operator string
+	Right    Node
+}
+
+func (np NodePrefixExpr) Node(indent string) string {
+	sb := strings.Builder{}
+
+	sb.WriteString(fmt.Sprintf("NodePrefix(%s)", np.Operator))
+
+	_indent := indent
+	indent += EmptyPad
+	sb.WriteString(fmt.Sprintf("\n%s└── %s", _indent, np.Right.Node(indent)))
+
+	return sb.String()
+}
+
+func (np NodePrefixExpr) String() string {
+	return "NodePrefix"
 }
