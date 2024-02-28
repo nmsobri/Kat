@@ -1,8 +1,1 @@
-1 * 2
--9
--77
--6 + 2
-false
-true
-!false
-!true
+aaa ? bbb : ccc

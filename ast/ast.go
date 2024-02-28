@@ -133,3 +133,44 @@ func (np NodePrefixExpr) Node(indent string) string {
 func (np NodePrefixExpr) String() string {
 	return "NodePrefix"
 }
+
+// #######################################################
+// #################### Node Identifier###################
+// #######################################################
+type NodeIdentifier struct {
+	Token token.Token
+	Name  string
+}
+
+func (ni NodeIdentifier) Node(indent string) string {
+	sb := strings.Builder{}
+
+	sb.WriteString(fmt.Sprintf("NodeIdentifier (%s)", ni.Name))
+
+	return sb.String()
+}
+
+func (ni NodeIdentifier) String() string {
+	return "NodeIdentifier"
+}
+
+// #######################################################
+// ################### Node Conditional ##################
+// #######################################################
+type NodeConditionalExpr struct {
+	Token   token.Token
+	ThenArm Node
+	ElseArm Node
+}
+
+func (nce NodeConditionalExpr) Node(indent string) string {
+	sb := strings.Builder{}
+
+	sb.WriteString("NodeConditionalExpr")
+
+	return sb.String()
+}
+
+func (nce NodeConditionalExpr) String() string {
+	return "NodeConditionalExpr"
+}

@@ -108,6 +108,9 @@ func (l *Lexer) NextToken() token.Token {
 	case '!':
 		t = l.MakeToken(l.Col, string(ch), token.BANG)
 
+	case '?':
+		t = l.MakeToken(l.Col, string(ch), token.QUESTION)
+
 	case '"':
 		col := l.Col
 		str := l.MakeString()

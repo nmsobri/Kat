@@ -46,6 +46,7 @@ const (
 	MINUS     = "MINUS"     // -
 	NEGATE    = "NEGATE"    // -
 	BANG      = "BANG"      // !
+	QUESTION  = "QUESTION"  // ?
 	MULTIPLY  = "MULTIPLY " // *
 	DIVIDE    = "DIVIDE"    // /
 	MODULO    = "MODULO"    // %
@@ -126,6 +127,7 @@ func GetPrecedence(tok Token) int {
 		MODULO:   Precedence.PRODUCT,
 		NEGATE:   Precedence.PREFIX,
 		BANG:     Precedence.PREFIX,
+		QUESTION: Precedence.CONDITIONAL,
 	}
 
 	precedence, ok := precedences[tok.Type]
