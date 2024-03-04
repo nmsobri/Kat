@@ -28,19 +28,23 @@ func New(lex *lexer.Lexer) *Parser {
 
 	// Register Prefixes
 	p.PrefixFunctions[token.DIGIT] = p.ParseNodeDigit
-	p.PrefixFunctions[token.TRUE] = p.ParseBoolean
-	p.PrefixFunctions[token.FALSE] = p.ParseBoolean
-	p.PrefixFunctions[token.MINUS] = p.ParseNodePrefix
-	p.PrefixFunctions[token.BANG] = p.ParseNodePrefix
+	p.PrefixFunctions[token.TRUE] = p.ParseNodeBoolean
+	p.PrefixFunctions[token.FALSE] = p.ParseNodeBoolean
+	p.PrefixFunctions[token.MINUS] = p.ParsePrefixExpr
+	p.PrefixFunctions[token.BANG] = p.ParsePrefixExpr
 	p.PrefixFunctions[token.IDENTIFIER] = p.ParseIdentifier
 
 	// Register Infixes
-	p.InfixFunctions[token.PLUS] = p.ParseNodeInfix
-	p.InfixFunctions[token.MINUS] = p.ParseNodeInfix
-	p.InfixFunctions[token.MULTIPLY] = p.ParseNodeInfix
-	p.InfixFunctions[token.DIVIDE] = p.ParseNodeInfix
-	p.InfixFunctions[token.MODULO] = p.ParseNodeInfix
-	p.InfixFunctions[token.QUESTION] = p.ParseNodeCondition
+	p.InfixFunctions[token.PLUS] = p.ParseBinaryExpr
+	p.InfixFunctions[token.MINUS] = p.ParseBinaryExpr
+	p.InfixFunctions[token.MULTIPLY] = p.ParseBinaryExpr
+	p.InfixFunctions[token.DIVIDE] = p.ParseBinaryExpr
+	p.InfixFunctions[token.MODULO] = p.ParseBinaryExpr
+	p.InfixFunctions[token.QUESTION] = p.ParseConditionExpr
+	p.InfixFunctions[token.LESS] = p.ParseBinaryExpr
+	p.InfixFunctions[token.LESSEQUAL] = p.ParseBinaryExpr
+	p.InfixFunctions[token.GREATER] = p.ParseBinaryExpr
+	p.InfixFunctions[token.GREATEREQUAL] = p.ParseBinaryExpr
 
 	p.NextToken = p.Lex.NextToken()
 
@@ -121,7 +125,7 @@ func (p *Parser) ParseNodeNil() ast.NodeInteger {
 	}
 }
 
-func (p *Parser) ParseNodeInfix(left ast.Node) ast.Node {
+func (p *Parser) ParseBinaryExpr(left ast.Node) ast.Node {
 	currentToken := p.CurrentToken()
 
 	right := p.ParseExpression(p.GetOperatorPrecedence(currentToken))
@@ -134,7 +138,7 @@ func (p *Parser) ParseNodeInfix(left ast.Node) ast.Node {
 	}
 }
 
-func (p *Parser) ParseNodePrefix() ast.Node {
+func (p *Parser) ParsePrefixExpr() ast.Node {
 	currentToken := p.CurrentToken() // the prefix
 
 	right := p.ParseExpression(token.Precedence.PREFIX)
@@ -143,14 +147,14 @@ func (p *Parser) ParseNodePrefix() ast.Node {
 		currentToken.Type = token.NEGATE
 	}
 
-	return ast.NodePrefixExpr{
+	return ast.NodeUnary{
 		Token:    currentToken,
 		Operator: currentToken.Value,
 		Right:    right,
 	}
 }
 
-func (p *Parser) ParseBoolean() ast.Node {
+func (p *Parser) ParseNodeBoolean() ast.Node {
 	val := true
 
 	if p.CurrentToken().Type == token.FALSE {
@@ -170,17 +174,18 @@ func (p *Parser) ParseIdentifier() ast.Node {
 	}
 }
 
-func (p *Parser) ParseNodeCondition(left ast.Node) ast.Node {
+func (p *Parser) ParseConditionExpr(left ast.Node) ast.Node {
 	currentToken := p.CurrentToken()
 	thenArm := p.ParseExpression(p.GetOperatorPrecedence(currentToken))
 
 	p.ConsumeToken() // consume the `:`
 
-	elseArm := p.ParseExpression(p.GetOperatorPrecedence(currentToken))
+	elseArm := p.ParseExpression(p.GetOperatorPrecedence(currentToken) - 1)
 
 	return ast.NodeConditionalExpr{
-		Token:   currentToken,
-		ThenArm: thenArm,
-		ElseArm: elseArm,
+		Token:     currentToken,
+		Condition: left,
+		ThenArm:   thenArm,
+		ElseArm:   elseArm,
 	}
 }

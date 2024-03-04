@@ -1,1 +1,6 @@
-aaa ? bbb : ccc
+true ? 100 : 999
+1 + 2 > 5 ? true : false
+1 < 3 ? true : false
+3 > 1 ? true : false
+1 <= 3 ? true : false
+3 >= 1 ? true : false

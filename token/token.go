@@ -7,6 +7,7 @@ import (
 var Precedence = struct {
 	ASSIGNMENT  int
 	CONDITIONAL int
+	COMPARISON  int
 	SUM         int
 	PRODUCT     int
 	EXPONENT    int
@@ -16,12 +17,13 @@ var Precedence = struct {
 }{
 	ASSIGNMENT:  1,
 	CONDITIONAL: 2,
-	SUM:         3,
-	PRODUCT:     4,
-	EXPONENT:    5,
-	PREFIX:      6,
-	POSTFIX:     7,
-	CALL:        8,
+	COMPARISON:  3,
+	SUM:         4,
+	PRODUCT:     5,
+	EXPONENT:    6,
+	PREFIX:      7,
+	POSTFIX:     8,
+	CALL:        9,
 }
 
 type TokenType string
@@ -120,14 +122,18 @@ func Symbol(key string) TokenType {
 
 func GetPrecedence(tok Token) int {
 	precedences := map[TokenType]int{
-		PLUS:     Precedence.SUM,
-		MINUS:    Precedence.SUM,
-		MULTIPLY: Precedence.PRODUCT,
-		DIVIDE:   Precedence.PRODUCT,
-		MODULO:   Precedence.PRODUCT,
-		NEGATE:   Precedence.PREFIX,
-		BANG:     Precedence.PREFIX,
-		QUESTION: Precedence.CONDITIONAL,
+		LESS:         Precedence.COMPARISON,
+		GREATER:      Precedence.COMPARISON,
+		LESSEQUAL:    Precedence.COMPARISON,
+		GREATEREQUAL: Precedence.COMPARISON,
+		PLUS:         Precedence.SUM,
+		MINUS:        Precedence.SUM,
+		MULTIPLY:     Precedence.PRODUCT,
+		DIVIDE:       Precedence.PRODUCT,
+		MODULO:       Precedence.PRODUCT,
+		NEGATE:       Precedence.PREFIX,
+		BANG:         Precedence.PREFIX,
+		QUESTION:     Precedence.CONDITIONAL,
 	}
 
 	precedence, ok := precedences[tok.Type]

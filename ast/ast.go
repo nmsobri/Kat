@@ -110,18 +110,18 @@ func (nbe NodeBinaryExpr) String() string {
 }
 
 // #######################################################
-// ################## Node Prefix Expr ###################
+// ################## Node Unary Expr ###################
 // #######################################################
-type NodePrefixExpr struct {
+type NodeUnary struct {
 	Token    token.Token
 	Operator string
 	Right    Node
 }
 
-func (np NodePrefixExpr) Node(indent string) string {
+func (np NodeUnary) Node(indent string) string {
 	sb := strings.Builder{}
 
-	sb.WriteString(fmt.Sprintf("NodePrefix(%s)", np.Operator))
+	sb.WriteString(fmt.Sprintf("NodeUnary(%s)", np.Operator))
 
 	_indent := indent
 	indent += EmptyPad
@@ -130,8 +130,8 @@ func (np NodePrefixExpr) Node(indent string) string {
 	return sb.String()
 }
 
-func (np NodePrefixExpr) String() string {
-	return "NodePrefix"
+func (np NodeUnary) String() string {
+	return "NodeUnary"
 }
 
 // #######################################################
@@ -158,15 +158,29 @@ func (ni NodeIdentifier) String() string {
 // ################### Node Conditional ##################
 // #######################################################
 type NodeConditionalExpr struct {
-	Token   token.Token
-	ThenArm Node
-	ElseArm Node
+	Token     token.Token
+	Condition Node
+	ThenArm   Node
+	ElseArm   Node
 }
 
 func (nce NodeConditionalExpr) Node(indent string) string {
 	sb := strings.Builder{}
 
 	sb.WriteString("NodeConditionalExpr")
+
+	_indent := indent
+	leftIndent := indent + PipePad
+	rightIndent := indent + EmptyPad
+
+	sb.WriteString(fmt.Sprintf("\n%s├── %s", _indent, nce.Condition.Node(leftIndent)))
+	sb.WriteString(fmt.Sprintf("\n%s└── %s", _indent, "NodeConsequences"))
+
+	_leftIndent := leftIndent + indent + PipePad
+	_rightIndent := rightIndent + indent + EmptyPad
+
+	sb.WriteString(fmt.Sprintf("\n%s├── %s", rightIndent, nce.ThenArm.Node(_leftIndent)))
+	sb.WriteString(fmt.Sprintf("\n%s└── %s", rightIndent, nce.ElseArm.Node(_rightIndent)))
 
 	return sb.String()
 }
