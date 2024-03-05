@@ -33,6 +33,9 @@ func New(lex *lexer.Lexer) *Parser {
 	p.PrefixFunctions[token.MINUS] = p.ParsePrefixExpr
 	p.PrefixFunctions[token.BANG] = p.ParsePrefixExpr
 	p.PrefixFunctions[token.IDENTIFIER] = p.ParseIdentifier
+	p.PrefixFunctions[token.CONST] = p.ParseConstDecl
+	p.PrefixFunctions[token.IMPORT] = p.ParseImportDecl
+	p.PrefixFunctions[token.STRING] = p.ParseNodeString
 
 	// Register Infixes
 	p.InfixFunctions[token.PLUS] = p.ParseBinaryExpr
@@ -45,6 +48,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.InfixFunctions[token.LESSEQUAL] = p.ParseBinaryExpr
 	p.InfixFunctions[token.GREATER] = p.ParseBinaryExpr
 	p.InfixFunctions[token.GREATEREQUAL] = p.ParseBinaryExpr
+	p.InfixFunctions[token.EQUAL] = p.ParseBinaryExpr
 
 	p.NextToken = p.Lex.NextToken()
 
@@ -74,7 +78,10 @@ func (p *Parser) ParseProgram() ast.NodeProgram {
 
 	for p.CurrentToken().Type != token.EOF {
 		program.Body = append(program.Body, p.ParseExpression(0))
-		p.ConsumeToken() // consume EOL
+
+		for p.PeekToken().Type == token.EOL {
+			p.ConsumeToken() // consume EOL
+		}
 	}
 
 	return program
@@ -187,5 +194,42 @@ func (p *Parser) ParseConditionExpr(left ast.Node) ast.Node {
 		Condition: left,
 		ThenArm:   thenArm,
 		ElseArm:   elseArm,
+	}
+}
+
+func (p *Parser) ParseConstDecl() ast.Node {
+	currentToken := p.CurrentToken()
+	identifier := p.ParseExpression(0)
+
+	p.ConsumeToken() // consume `=`
+
+	value := p.ParseExpression(0)
+
+	return ast.NodeConstDeclaration{
+		Token:      currentToken,
+		Identifier: identifier,
+		Value:      value,
+	}
+}
+
+func (p *Parser) ParseImportDecl() ast.Node {
+	currentToken := p.CurrentToken()
+	p.ConsumeToken() // consume `(`
+
+	path := p.ParseExpression(0)
+
+	p.ConsumeToken() // consume `)`
+
+	return ast.NodeImportDeclaration{
+		Token: currentToken,
+		Path:  path,
+	}
+
+}
+
+func (p *Parser) ParseNodeString() ast.Node {
+	return ast.NodeString{
+		Token: p.CurrentToken(),
+		Value: p.CurrentToken().Value,
 	}
 }

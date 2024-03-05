@@ -15,15 +15,15 @@ var Precedence = struct {
 	POSTFIX     int
 	CALL        int
 }{
-	ASSIGNMENT:  1,
-	CONDITIONAL: 2,
-	COMPARISON:  3,
-	SUM:         4,
-	PRODUCT:     5,
-	EXPONENT:    6,
-	PREFIX:      7,
-	POSTFIX:     8,
-	CALL:        9,
+	ASSIGNMENT:  0,
+	CONDITIONAL: 1,
+	COMPARISON:  2,
+	SUM:         3,
+	PRODUCT:     4,
+	EXPONENT:    5,
+	PREFIX:      6,
+	POSTFIX:     7,
+	CALL:        8,
 }
 
 type TokenType string
@@ -82,6 +82,7 @@ const (
 	TRUE       = "TRUE"       // true
 	FALSE      = "FALSE"      // false
 	LET        = "LET"        // let
+	CONST      = "CONST"      // const
 	IF         = "IF"         // if
 	ELSE       = "ELSE"       // else
 	FOR        = "FOR"        // for
@@ -100,6 +101,7 @@ const (
 func Symbol(key string) TokenType {
 	keywords := map[string]TokenType{
 		"let":    LET,
+		"const":  CONST,
 		"if":     IF,
 		"else":   ELSE,
 		"for":    FOR,
@@ -122,6 +124,7 @@ func Symbol(key string) TokenType {
 
 func GetPrecedence(tok Token) int {
 	precedences := map[TokenType]int{
+		EQUAL:        Precedence.ASSIGNMENT,
 		LESS:         Precedence.COMPARISON,
 		GREATER:      Precedence.COMPARISON,
 		LESSEQUAL:    Precedence.COMPARISON,

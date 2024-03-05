@@ -188,3 +188,54 @@ func (nce NodeConditionalExpr) Node(indent string) string {
 func (nce NodeConditionalExpr) String() string {
 	return "NodeConditionalExpr"
 }
+
+// #######################################################
+// #################### Node Const Decl ##################
+// #######################################################
+
+type NodeConstDeclaration struct {
+	Token      token.Token
+	Identifier Node
+	Value      Node
+}
+
+func (ncd NodeConstDeclaration) Node(indent string) string {
+	return ""
+}
+
+func (ncd NodeConstDeclaration) String() string {
+	return "NodeConstDeclaration"
+}
+
+// #######################################################
+// ################### Node Import Decl ##################
+// #######################################################
+
+type NodeImportDeclaration struct {
+	Token token.Token
+	Path  Node
+}
+
+func (nid NodeImportDeclaration) Node(indent string) string {
+	return ""
+}
+
+func (nid NodeImportDeclaration) String() string {
+	return "NodeConstDeclaration"
+}
+
+// #######################################################
+// ##################### Node String #####################
+// #######################################################
+type NodeString struct {
+	Token token.Token
+	Value string
+}
+
+func (ns NodeString) Node(indent string) string {
+	return ""
+}
+
+func (ns NodeString) String() string {
+	return "NodeString"
+}
