@@ -239,3 +239,20 @@ func (ns NodeString) Node(indent string) string {
 func (ns NodeString) String() string {
 	return "NodeString"
 }
+
+// #######################################################
+// ##################### Node Struct #####################
+// #######################################################
+type NodeStruct struct {
+	Token      token.Token
+	Identifier Node
+	Properties []Node
+}
+
+func (ns NodeStruct) Node(indent string) string {
+	return ""
+}
+
+func (ns NodeStruct) String() string {
+	return "NodeStruct"
+}

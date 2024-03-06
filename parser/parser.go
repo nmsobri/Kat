@@ -36,6 +36,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.PrefixFunctions[token.CONST] = p.ParseConstDecl
 	p.PrefixFunctions[token.IMPORT] = p.ParseImportDecl
 	p.PrefixFunctions[token.STRING] = p.ParseNodeString
+	p.PrefixFunctions[token.STRUCT] = p.ParseNodeStruct
 
 	// Register Infixes
 	p.InfixFunctions[token.PLUS] = p.ParseBinaryExpr
@@ -61,6 +62,15 @@ func (p *Parser) ConsumeToken() token.Token {
 	return p.Token
 }
 
+func (p *Parser) ExpectToken(tok token.TokenType) token.Token {
+	if p.NextToken.Type != tok {
+		log.Fatalf("Expect next token of type: %s, got: %s\n", tok, p.NextToken)
+		return token.Token{}
+	}
+
+	return p.ConsumeToken()
+}
+
 func (p *Parser) CurrentToken() token.Token {
 	return p.Token
 }
@@ -81,6 +91,10 @@ func (p *Parser) ParseProgram() ast.NodeProgram {
 
 		for p.PeekToken().Type == token.EOL {
 			p.ConsumeToken() // consume EOL
+		}
+
+		if p.PeekToken().Type == token.EOF {
+			p.ConsumeToken()
 		}
 	}
 
@@ -231,5 +245,41 @@ func (p *Parser) ParseNodeString() ast.Node {
 	return ast.NodeString{
 		Token: p.CurrentToken(),
 		Value: p.CurrentToken().Value,
+	}
+}
+
+func (p *Parser) ParseNodeStruct() ast.Node {
+	currentToken := p.CurrentToken()
+
+	identifier := p.ParseExpression(0)
+
+	p.ExpectToken(token.LBRACE) // consume `{`
+
+	properties := make([]ast.Node, 0)
+
+	for p.PeekToken().Type != token.RBRACE {
+		if p.PeekToken().Type == token.EOL {
+			p.ConsumeToken()
+		}
+
+		if p.PeekToken().Type == token.RBRACE {
+			break
+		}
+
+		identifier := p.ParseExpression(0)
+
+		properties = append(properties, identifier)
+
+		if p.PeekToken().Type == token.COMMA {
+			p.ConsumeToken() // consume `,`
+		}
+	}
+
+	p.ExpectToken(token.RBRACE) // consume `}`
+
+	return ast.NodeStruct{
+		Token:      currentToken,
+		Identifier: identifier,
+		Properties: properties,
 	}
 }

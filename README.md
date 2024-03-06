@@ -5,7 +5,6 @@ Second stage would be compile it to custom byte code and then run it
 Hopefully it will run the following code  
 
 ```
-
 const fmt = import("fmt")
 
 struct User {
