@@ -5,23 +5,33 @@ Second stage would be compile it to custom byte code and then run it
 Hopefully it will run the following code  
 
 ```
-let fmt = import("fmt")
+
+const fmt = import("fmt")
 
 struct User {
     name,
     age,
     job,
+}
 
-    fn info(self) {
-        fmt.Print("Name is %s, age is %d, job is %s", self.name, self.age, self.job)
-    }
+fn User.setAge(self, age) {
+    self.age =  age
+}
+
+fn User.info(self) {
+    fmt.Print("Name is %s, age is %d, job is %s", self.name, self.age, self.job)
+}
+
+fn say(greet) {
+    fmt.Print(greet)
 }
 
 fn main() {
     let arr = [1,2,3,4,5]
     let map = {name: "sobri", location: "penang"}
 
-    let user = User{name:"Sobri", age:42, job:"Programmer"}
+    let user = User{name:"Sobri", age:82, job:"Programmer"}
+    user.setAge(99)
     user.info()
 
     say("hello world")
@@ -44,9 +54,5 @@ fn main() {
     for let j = 0; j < 5; j++ {
         fmt.Print(j)
     }
-}
-
-fn say(greet) {
-    fmt.Print(greet)
 }
 ```
