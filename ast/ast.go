@@ -82,6 +82,22 @@ func (ni NodeInteger) String() string {
 }
 
 // #######################################################
+// ###################### Node Double ####################
+// #######################################################
+type NodeDouble struct {
+	Token token.Token
+	Value float64
+}
+
+func (nd NodeDouble) Node(indent string) string {
+	return fmt.Sprintf("NodeDouble (%.2f)", nd.Value)
+}
+
+func (ni NodeDouble) String() string {
+	return "NodeDouble"
+}
+
+// #######################################################
 // ##################### Node Operator ###################
 // #######################################################
 type NodeBinaryExpr struct {

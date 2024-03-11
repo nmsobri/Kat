@@ -27,7 +27,8 @@ func New(lex *lexer.Lexer) *Parser {
 	}
 
 	// Register Prefixes
-	p.PrefixFunctions[token.DIGIT] = p.ParseNodeDigit
+	p.PrefixFunctions[token.INTEGER] = p.ParseNodeDigit
+	p.PrefixFunctions[token.DOUBLE] = p.ParseNodeDouble
 	p.PrefixFunctions[token.TRUE] = p.ParseNodeBoolean
 	p.PrefixFunctions[token.FALSE] = p.ParseNodeBoolean
 	p.PrefixFunctions[token.MINUS] = p.ParsePrefixExpr
@@ -37,6 +38,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.PrefixFunctions[token.IMPORT] = p.ParseImportDecl
 	p.PrefixFunctions[token.STRING] = p.ParseNodeString
 	p.PrefixFunctions[token.STRUCT] = p.ParseNodeStruct
+	p.PrefixFunctions[token.FUNCTION] = p.ParseNodeFunction
 
 	// Register Infixes
 	p.InfixFunctions[token.PLUS] = p.ParseBinaryExpr
@@ -134,6 +136,19 @@ func (p *Parser) ParseNodeDigit() ast.Node {
 	}
 
 	return ast.NodeInteger{
+		Token: p.CurrentToken(),
+		Value: val,
+	}
+}
+
+func (p *Parser) ParseNodeDouble() ast.Node {
+	val, e := strconv.ParseFloat(p.CurrentToken().Value, 64)
+
+	if e != nil {
+		log.Fatalf("Parser::Error:%s\n", e)
+	}
+
+	return ast.NodeDouble{
 		Token: p.CurrentToken(),
 		Value: val,
 	}
@@ -285,4 +300,8 @@ func (p *Parser) ParseNodeStruct() ast.Node {
 		Identifier: identifier,
 		Properties: structProperties,
 	}
+}
+
+func (*Parser) ParseNodeFunction() ast.Node {
+	return nil
 }

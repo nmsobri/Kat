@@ -2,6 +2,7 @@ package lexer
 
 import (
 	"kat/token"
+	"slices"
 )
 
 type Lexer struct {
@@ -140,7 +141,14 @@ func (l *Lexer) NextToken() token.Token {
 		if l.IsDigit(ch) {
 			col := l.Col
 			dig := l.MakeDigit()
-			t = l.MakeToken(col, string(dig), token.DIGIT)
+
+			var tok token.TokenType = token.INTEGER
+
+			if slices.Contains(dig, 46) {
+				tok = token.DOUBLE
+			}
+
+			t = l.MakeToken(col, string(dig), tok)
 		} else if l.IsChar(ch) {
 			col := l.Col
 			unknown := l.MakeIdentifier()
@@ -181,6 +189,10 @@ func (l *Lexer) IsChar(ch byte) bool {
 }
 
 func (l *Lexer) IsDigit(ch byte) bool {
+	return ch >= '0' && ch <= '9'
+}
+
+func (l *Lexer) IsDouble(ch byte) bool {
 	return ch >= '0' && ch <= '9' || ch == '.'
 }
 
@@ -218,7 +230,7 @@ func (l *Lexer) MakeDigit() []byte {
 	start := l.Col
 	l.NextChar()
 
-	for l.IsDigit(l.Char()) {
+	for l.IsDouble(l.Char()) {
 		l.NextChar()
 	}
 

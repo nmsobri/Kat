@@ -74,8 +74,9 @@ const (
 	LESSEQUAL    = "LESSEQUAL"    // <=
 
 	// Literal
-	STRING = "STRING"
-	DIGIT  = "DIGIT"
+	STRING  = "STRING"
+	INTEGER = "INTEGER"
+	DOUBLE  = "DOUBLE"
 
 	// Keyword
 
