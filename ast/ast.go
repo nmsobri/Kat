@@ -200,7 +200,17 @@ type NodeConstDeclaration struct {
 }
 
 func (ncd NodeConstDeclaration) Node(indent string) string {
-	return ""
+	sb := strings.Builder{}
+	sb.WriteString("NodeConstDeclaration")
+
+	_indent := indent
+	leftIndent := indent + PipePad
+	rightIndent := indent + EmptyPad
+
+	sb.WriteString(fmt.Sprintf("\n%s├── %s", _indent, ncd.Identifier.Node(leftIndent)))
+	sb.WriteString(fmt.Sprintf("\n%s└── %s", _indent, ncd.Value.Node(rightIndent)))
+
+	return sb.String()
 }
 
 func (ncd NodeConstDeclaration) String() string {
@@ -217,11 +227,17 @@ type NodeImportDeclaration struct {
 }
 
 func (nid NodeImportDeclaration) Node(indent string) string {
-	return ""
+	sb := strings.Builder{}
+	sb.WriteString("NodeImportDeclaration")
+
+	_indent := indent + EmptyPad
+	sb.WriteString(fmt.Sprintf("\n%s└── %s", indent, nid.Path.Node(_indent)))
+
+	return sb.String()
 }
 
 func (nid NodeImportDeclaration) String() string {
-	return "NodeConstDeclaration"
+	return "NodeImportDeclaration"
 }
 
 // #######################################################
@@ -233,7 +249,9 @@ type NodeString struct {
 }
 
 func (ns NodeString) Node(indent string) string {
-	return ""
+	sb := strings.Builder{}
+	sb.WriteString(fmt.Sprintf("NodeString (%s)", ns.Value))
+	return sb.String()
 }
 
 func (ns NodeString) String() string {
@@ -246,13 +264,54 @@ func (ns NodeString) String() string {
 type NodeStruct struct {
 	Token      token.Token
 	Identifier Node
-	Properties []Node
+	Properties NodeStructProperties
 }
 
 func (ns NodeStruct) Node(indent string) string {
-	return ""
+	sb := strings.Builder{}
+	sb.WriteString("NodeStructDeclaration")
+
+	_indent := indent
+	leftIndent := indent + PipePad
+	rightIndent := indent + EmptyPad
+
+	sb.WriteString(fmt.Sprintf("\n%s├── %s", _indent, ns.Identifier.Node(leftIndent)))
+	sb.WriteString(fmt.Sprintf("\n%s└── %s", _indent, ns.Properties.Node(rightIndent)))
+
+	return sb.String()
 }
 
 func (ns NodeStruct) String() string {
 	return "NodeStruct"
+}
+
+// #######################################################
+// ################## Node Struct Prop ###################
+// #######################################################
+type NodeStructProperties struct {
+	Token      token.Token
+	Properties []Node
+}
+
+func (nsp NodeStructProperties) Node(indent string) string {
+	sb := strings.Builder{}
+	sb.WriteString("NodeStructProperties")
+
+	_indent := indent
+	leftIndent := indent + PipePad
+	//rightIndent := indent + EmptyPad
+
+	for i, nodeProperty := range nsp.Properties {
+		if i == len(nsp.Properties)-1 {
+			sb.WriteString(fmt.Sprintf("\n%s└── %s", _indent, nodeProperty.Node(leftIndent)))
+		} else {
+			sb.WriteString(fmt.Sprintf("\n%s├── %s", _indent, nodeProperty.Node(leftIndent)))
+		}
+	}
+
+	return sb.String()
+}
+
+func (nsp NodeStructProperties) String() string {
+	return "NodeStructProperties"
 }

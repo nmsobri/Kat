@@ -255,7 +255,10 @@ func (p *Parser) ParseNodeStruct() ast.Node {
 
 	p.ExpectToken(token.LBRACE) // consume `{`
 
-	properties := make([]ast.Node, 0)
+	structProperties := ast.NodeStructProperties{
+		Token:      currentToken,
+		Properties: make([]ast.Node, 0),
+	}
 
 	for p.PeekToken().Type != token.RBRACE {
 		if p.PeekToken().Type == token.EOL {
@@ -268,7 +271,7 @@ func (p *Parser) ParseNodeStruct() ast.Node {
 
 		identifier := p.ParseExpression(0)
 
-		properties = append(properties, identifier)
+		structProperties.Properties = append(structProperties.Properties, identifier)
 
 		if p.PeekToken().Type == token.COMMA {
 			p.ConsumeToken() // consume `,`
@@ -280,6 +283,6 @@ func (p *Parser) ParseNodeStruct() ast.Node {
 	return ast.NodeStruct{
 		Token:      currentToken,
 		Identifier: identifier,
-		Properties: properties,
+		Properties: structProperties,
 	}
 }
