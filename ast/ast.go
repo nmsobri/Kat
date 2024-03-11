@@ -93,12 +93,12 @@ func (nd NodeDouble) Node(indent string) string {
 	return fmt.Sprintf("NodeDouble (%.2f)", nd.Value)
 }
 
-func (ni NodeDouble) String() string {
+func (nd NodeDouble) String() string {
 	return "NodeDouble"
 }
 
 // #######################################################
-// ##################### Node Operator ###################
+// #################### Node BinaryExpr ##################
 // #######################################################
 type NodeBinaryExpr struct {
 	Token    token.Token
@@ -208,7 +208,6 @@ func (nce NodeConditionalExpr) String() string {
 // #######################################################
 // #################### Node Const Decl ##################
 // #######################################################
-
 type NodeConstDeclaration struct {
 	Token      token.Token
 	Identifier Node
@@ -236,7 +235,6 @@ func (ncd NodeConstDeclaration) String() string {
 // #######################################################
 // ################### Node Import Decl ##################
 // #######################################################
-
 type NodeImportDeclaration struct {
 	Token token.Token
 	Path  Node
@@ -330,4 +328,21 @@ func (nsp NodeStructProperties) Node(indent string) string {
 
 func (nsp NodeStructProperties) String() string {
 	return "NodeStructProperties"
+}
+
+// #######################################################
+// #################### Node Function ####################
+// #######################################################
+type NodeFunction struct {
+	Token      token.Token
+	Identifier Node
+	Arguements []Node
+	Body       []Node
+}
+
+func (nsp NodeFunction) Node(indent string) string {
+	return "NodeFunction"
+}
+func (nsp NodeFunction) String() string {
+	return "NodeFunction"
 }

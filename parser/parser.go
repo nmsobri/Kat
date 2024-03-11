@@ -27,6 +27,7 @@ func New(lex *lexer.Lexer) *Parser {
 	}
 
 	// Register Prefixes
+	p.PrefixFunctions[token.SELF] = p.ParseIdentifier
 	p.PrefixFunctions[token.INTEGER] = p.ParseNodeDigit
 	p.PrefixFunctions[token.DOUBLE] = p.ParseNodeDouble
 	p.PrefixFunctions[token.TRUE] = p.ParseNodeBoolean
@@ -204,9 +205,20 @@ func (p *Parser) ParseNodeBoolean() ast.Node {
 }
 
 func (p *Parser) ParseIdentifier() ast.Node {
+	currentToken := p.CurrentToken()
+	identifier := currentToken.Value
+
+	if p.PeekToken().Type == token.DOT {
+		p.ExpectToken(token.DOT) // consume `.`
+		p.ParseExpression(0)
+
+		identifier += "."
+		identifier += p.CurrentToken().Value
+	}
+
 	return ast.NodeIdentifier{
-		Token: p.CurrentToken(),
-		Name:  p.CurrentToken().Value,
+		Token: currentToken,
+		Name:  identifier,
 	}
 }
 
@@ -302,6 +314,58 @@ func (p *Parser) ParseNodeStruct() ast.Node {
 	}
 }
 
-func (*Parser) ParseNodeFunction() ast.Node {
-	return nil
+func (p *Parser) ParseNodeFunction() ast.Node {
+	currentToken := p.CurrentToken()
+
+	identifier := p.ParseExpression(0)
+
+	p.ExpectToken(token.LPAREN)
+
+	arguements := p.ParseNodeFunctionArguement()
+
+	p.ExpectToken(token.RPAREN)
+
+	p.ExpectToken(token.LBRACE)
+
+	if p.PeekToken().Type == token.EOL {
+		p.ExpectToken(token.EOL) // consume `\n`
+	}
+
+	body := p.ParseNodeFunctionBody()
+
+	p.ExpectToken(token.RBRACE)
+
+	return ast.NodeFunction{
+		Token:      currentToken,
+		Identifier: identifier,
+		Arguements: arguements,
+		Body:       body,
+	}
+}
+
+func (p *Parser) ParseNodeFunctionArguement() []ast.Node {
+	arguements := make([]ast.Node, 0)
+
+	for p.PeekToken().Type != token.RPAREN {
+		identifier := p.ParseExpression(0)
+		arguements = append(arguements, identifier)
+
+		if p.PeekToken().Type == token.COMMA {
+			p.ExpectToken(token.COMMA) // consume `,`
+		}
+	}
+
+	return arguements
+}
+
+func (p *Parser) ParseNodeFunctionBody() []ast.Node {
+	body := make([]ast.Node, 0)
+
+	for p.PeekToken().Type != token.RBRACE {
+		expression := p.ParseExpression(0)
+		p.ExpectToken(token.EOL)
+		body = append(body, expression)
+	}
+
+	return body
 }
