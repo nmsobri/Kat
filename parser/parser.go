@@ -53,6 +53,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.InfixFunctions[token.GREATER] = p.ParseBinaryExpr
 	p.InfixFunctions[token.GREATEREQUAL] = p.ParseBinaryExpr
 	p.InfixFunctions[token.EQUAL] = p.ParseBinaryExpr
+	p.InfixFunctions[token.LPAREN] = p.ParseFunctionCall
 
 	p.NextToken = p.Lex.NextToken()
 
@@ -120,7 +121,7 @@ func (p *Parser) ParseExpression(currentPrecedence int) ast.Node {
 		infixFunction, ok := p.InfixFunctions[p.CurrentToken().Type]
 
 		if !ok {
-			log.Fatalf("Could not parse token: %s", p.CurrentToken().Type)
+			log.Fatalf("Could not parse token: %s, value: %s", p.CurrentToken().Type, p.CurrentToken().Value)
 		}
 
 		left = infixFunction(left)
@@ -210,7 +211,7 @@ func (p *Parser) ParseIdentifier() ast.Node {
 
 	if p.PeekToken().Type == token.DOT {
 		p.ExpectToken(token.DOT) // consume `.`
-		p.ParseExpression(0)
+		p.ParseExpression(token.Precedence.CALL + 1)
 
 		identifier += "."
 		identifier += p.CurrentToken().Value
@@ -317,7 +318,7 @@ func (p *Parser) ParseNodeStruct() ast.Node {
 func (p *Parser) ParseNodeFunction() ast.Node {
 	currentToken := p.CurrentToken()
 
-	identifier := p.ParseExpression(0)
+	identifier := p.ParseExpression(token.Precedence.CALL + 1)
 
 	p.ExpectToken(token.LPAREN)
 
@@ -368,4 +369,16 @@ func (p *Parser) ParseNodeFunctionBody() []ast.Node {
 	}
 
 	return body
+}
+
+func (p *Parser) ParseFunctionCall(left ast.Node) ast.Node {
+	currentToken := p.CurrentToken()
+	functionArgs := p.ParseNodeFunctionArguement()
+	p.ExpectToken(token.RPAREN)
+
+	return ast.NodeFunctionCall{
+		Token: currentToken,
+		Left:  left,
+		Right: functionArgs,
+	}
 }

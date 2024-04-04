@@ -343,6 +343,25 @@ type NodeFunction struct {
 func (nsp NodeFunction) Node(indent string) string {
 	return "NodeFunction"
 }
+
 func (nsp NodeFunction) String() string {
 	return "NodeFunction"
+}
+
+// #######################################################
+// ################### Node Function Call ################
+// #######################################################
+
+type NodeFunctionCall struct {
+	Token token.Token
+	Left  Node
+	Right []Node
+}
+
+func (nfc NodeFunctionCall) Node(indent string) string {
+	return ""
+}
+
+func (nfc NodeFunctionCall) String() string {
+	return ""
 }
