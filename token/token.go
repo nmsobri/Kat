@@ -15,15 +15,15 @@ var Precedence = struct {
 	POSTFIX     int
 	CALL        int
 }{
-	ASSIGNMENT:  1,
-	CONDITIONAL: 2,
-	COMPARISON:  3,
-	SUM:         4,
-	PRODUCT:     5,
-	EXPONENT:    6,
-	PREFIX:      7,
-	POSTFIX:     8,
-	CALL:        9,
+	ASSIGNMENT:  0,
+	CONDITIONAL: 1,
+	COMPARISON:  2,
+	SUM:         3,
+	PRODUCT:     4,
+	EXPONENT:    5,
+	PREFIX:      6,
+	POSTFIX:     7,
+	CALL:        8,
 }
 
 type TokenType string
@@ -147,5 +147,5 @@ func GetPrecedence(tok Token) int {
 		return precedence
 	}
 
-	return 0
+	return -1
 }

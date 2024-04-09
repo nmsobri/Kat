@@ -365,3 +365,16 @@ func (nfc NodeFunctionCall) Node(indent string) string {
 func (nfc NodeFunctionCall) String() string {
 	return ""
 }
+
+type NodeLetDecl struct {
+	Identifier Node
+	Value      Node
+}
+
+func (nld NodeLetDecl) Node(indent string) string {
+	return ""
+}
+
+func (nld NodeLetDecl) String() string {
+	return ""
+}

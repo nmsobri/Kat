@@ -40,6 +40,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.PrefixFunctions[token.STRING] = p.ParseNodeString
 	p.PrefixFunctions[token.STRUCT] = p.ParseNodeStruct
 	p.PrefixFunctions[token.FUNCTION] = p.ParseNodeFunction
+	p.PrefixFunctions[token.LET] = p.ParseLetDecl
 
 	// Register Infixes
 	p.InfixFunctions[token.PLUS] = p.ParseBinaryExpr
@@ -115,7 +116,7 @@ func (p *Parser) ParseExpression(currentPrecedence int) ast.Node {
 
 	left := prefixFunction()
 
-	for p.PeekToken().Type != token.EOL && p.GetOperatorPrecedence(p.PeekToken()) > currentPrecedence {
+	for p.PeekToken().Type != token.EOL && p.GetOperatorPrecedence(p.PeekToken()) >= currentPrecedence {
 		p.ConsumeToken() // consume the infix operator
 
 		infixFunction, ok := p.InfixFunctions[p.CurrentToken().Type]
@@ -381,4 +382,10 @@ func (p *Parser) ParseFunctionCall(left ast.Node) ast.Node {
 		Left:  left,
 		Right: functionArgs,
 	}
+}
+
+func (p *Parser) ParseLetDecl() ast.Node {
+	expr := p.ParseExpression(0)
+	return expr
+
 }
