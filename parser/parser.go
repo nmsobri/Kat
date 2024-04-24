@@ -69,7 +69,7 @@ func (p *Parser) ConsumeToken() token.Token {
 
 func (p *Parser) ExpectToken(tok token.TokenType) token.Token {
 	if p.NextToken.Type != tok {
-		log.Fatalf("Expect next token of type: %s, got: %s\n", tok, p.NextToken)
+		log.Fatalf("Expect next token of type: %s, got: %s at line: %d, column:%d\n", tok, p.NextToken.Type, p.NextToken.Row+1, p.NextToken.Col+1)
 		return token.Token{}
 	}
 
@@ -111,18 +111,18 @@ func (p *Parser) ParseExpression(currentPrecedence int) ast.Node {
 	prefixFunction, ok := p.PrefixFunctions[p.CurrentToken().Type]
 
 	if !ok {
-		log.Fatalf("Could not parse token: %s, value: %s", p.CurrentToken().Type, p.CurrentToken().Value)
+		log.Fatalf("Could not parse token: %s, value: `%s` at line: %d, column: %d", p.CurrentToken().Type, p.CurrentToken().Value, p.CurrentToken().Row+1, p.CurrentToken().Col+1)
 	}
 
 	left := prefixFunction()
 
-	for p.PeekToken().Type != token.EOL && p.GetOperatorPrecedence(p.PeekToken()) >= currentPrecedence {
+	for p.PeekToken().Type != token.EOL && p.GetOperatorPrecedence(p.PeekToken()) > currentPrecedence {
 		p.ConsumeToken() // consume the infix operator
 
 		infixFunction, ok := p.InfixFunctions[p.CurrentToken().Type]
 
 		if !ok {
-			log.Fatalf("Could not parse token: %s, value: %s", p.CurrentToken().Type, p.CurrentToken().Value)
+			log.Fatalf("Could not parse token: %s, value: `%s` at line: %d, column: %d", p.CurrentToken().Type, p.CurrentToken().Value, p.CurrentToken().Row+1, p.CurrentToken().Col+1)
 		}
 
 		left = infixFunction(left)
@@ -211,8 +211,8 @@ func (p *Parser) ParseIdentifier() ast.Node {
 	identifier := currentToken.Value
 
 	if p.PeekToken().Type == token.DOT {
-		p.ExpectToken(token.DOT) // consume `.`
-		p.ParseExpression(token.Precedence.CALL + 1)
+		p.ExpectToken(token.DOT)        // consume `.`
+		p.ExpectToken(token.IDENTIFIER) // consume the identifier
 
 		identifier += "."
 		identifier += p.CurrentToken().Value
@@ -318,7 +318,7 @@ func (p *Parser) ParseNodeStruct() ast.Node {
 
 func (p *Parser) ParseNodeFunction() ast.Node {
 	currentToken := p.CurrentToken()
-	identifier := p.ParseExpression(token.Precedence.CALL + 1)
+	identifier := p.ParseExpression(token.Precedence.CALL)
 
 	p.ExpectToken(token.LPAREN)
 	arguements := p.ParseNodeFunctionArguement()
@@ -382,9 +382,9 @@ func (p *Parser) ParseFunctionCall(left ast.Node) ast.Node {
 }
 
 func (p *Parser) ParseLetDecl() ast.Node {
-	ident := p.ParseExpression(0)
+	ident := p.ParseExpression(token.Precedence.ASSIGNMENT)
 	p.ExpectToken(token.EQUAL)
-	value := p.ParseExpression(0)
+	value := p.ParseExpression(token.Precedence.ASSIGNMENT)
 
 	return ast.NodeLetDecl{
 		Identifier: ident,
