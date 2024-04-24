@@ -318,13 +318,10 @@ func (p *Parser) ParseNodeStruct() ast.Node {
 
 func (p *Parser) ParseNodeFunction() ast.Node {
 	currentToken := p.CurrentToken()
-
 	identifier := p.ParseExpression(token.Precedence.CALL + 1)
 
 	p.ExpectToken(token.LPAREN)
-
 	arguements := p.ParseNodeFunctionArguement()
-
 	p.ExpectToken(token.RPAREN)
 
 	p.ExpectToken(token.LBRACE)
@@ -385,7 +382,12 @@ func (p *Parser) ParseFunctionCall(left ast.Node) ast.Node {
 }
 
 func (p *Parser) ParseLetDecl() ast.Node {
-	expr := p.ParseExpression(0)
-	return expr
+	ident := p.ParseExpression(0)
+	p.ExpectToken(token.EQUAL)
+	value := p.ParseExpression(0)
 
+	return ast.NodeLetDecl{
+		Identifier: ident,
+		Value:      value,
+	}
 }
