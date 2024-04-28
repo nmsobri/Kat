@@ -125,6 +125,7 @@ func Symbol(key string) TokenType {
 	return IDENTIFIER
 }
 
+// Precedence is only for infix expression i guess
 func GetPrecedence(tok Token) int {
 	precedences := map[TokenType]int{
 		EQUAL:        Precedence.ASSIGNMENT,
@@ -142,6 +143,7 @@ func GetPrecedence(tok Token) int {
 		QUESTION:     Precedence.CONDITIONAL,
 		LPAREN:       Precedence.CALL,
 		LBRACKET:     Precedence.INDEX,
+		LBRACE:       Precedence.INDEX,
 	}
 
 	precedence, ok := precedences[tok.Type]

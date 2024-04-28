@@ -1,3 +1,11 @@
+const fmt = import("fmt")
+
+struct User {
+    name,
+    age,
+    job,
+}
+
 fn User.setAge(self, age) {
     self.age =  age
 }

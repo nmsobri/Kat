@@ -56,6 +56,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.PrefixFunctions[token.LET] = p.ParseLetDecl
 	p.PrefixFunctions[token.IDENTIFIER] = p.ParseIdentifier
 	p.PrefixFunctions[token.LBRACKET] = p.ParseArrayDecl
+	p.PrefixFunctions[token.LBRACE] = p.ParseMapDecl
 
 	// Register Infixes
 	p.InfixFunctions[token.PLUS] = p.ParseBinaryExpr
@@ -71,6 +72,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.InfixFunctions[token.EQUAL] = p.ParseBinaryExpr
 	p.InfixFunctions[token.LPAREN] = p.ParseFunctionCall
 	p.InfixFunctions[token.LBRACKET] = p.ParseIndexExpr
+	p.InfixFunctions[token.LBRACE] = p.ParseStructExpr
 
 	p.NextToken = p.Lex.NextToken()
 
@@ -258,9 +260,9 @@ func (p *Parser) ParseConditionExpr(left ast.Node) ast.Node {
 
 func (p *Parser) ParseConstDecl() ast.Node {
 	currentToken := p.CurrentToken()
-	identifier := p.ParseExpression(0)
+	identifier := p.ParseExpression(token.Precedence.ASSIGNMENT)
 
-	p.ConsumeToken() // consume `=`
+	p.ExpectToken(token.EQUAL) // consume `=`
 
 	value := p.ParseExpression(0)
 
@@ -273,11 +275,11 @@ func (p *Parser) ParseConstDecl() ast.Node {
 
 func (p *Parser) ParseImportDecl() ast.Node {
 	currentToken := p.CurrentToken()
-	p.ConsumeToken() // consume `(`
+	p.ExpectToken(token.LPAREN) // consume `(`
 
 	path := p.ParseExpression(0)
 
-	p.ConsumeToken() // consume `)`
+	p.ExpectToken(token.RPAREN) // consume `)`
 
 	return ast.NodeImportDeclaration{
 		Token: currentToken,
@@ -296,7 +298,11 @@ func (p *Parser) ParseNodeString() ast.Node {
 func (p *Parser) ParseNodeStruct() ast.Node {
 	currentToken := p.CurrentToken()
 
-	identifier := p.ParseExpression(0)
+	identifier := p.ParseExpression(token.Precedence.INDEX)
+
+	for p.PeekToken().Type == token.EOL {
+		p.ConsumeToken()
+	}
 
 	p.ExpectToken(token.LBRACE) // consume `{`
 
@@ -378,8 +384,11 @@ func (p *Parser) ParseNodeFunctionBody() []ast.Node {
 
 	for p.PeekToken().Type != token.RBRACE {
 		expression := p.ParseExpression(0)
-		p.ExpectToken(token.EOL)
 		body = append(body, expression)
+
+		for p.PeekToken().Type == token.EOL {
+			p.ExpectToken(token.EOL)
+		}
 	}
 
 	return body
@@ -439,5 +448,39 @@ func (p *Parser) ParseIndexExpr(left ast.Node) ast.Node {
 		Token:      currentToken,
 		Identifier: left,
 		Index:      index,
+	}
+}
+
+func (p *Parser) ParseMapDecl() ast.Node {
+	currentToken := p.CurrentToken()
+	values := make(map[ast.Node]ast.Node, 0)
+
+	for p.PeekToken().Type != token.RBRACE {
+		ident := p.ParseExpression(0)
+		p.ExpectToken(token.COLON)
+		value := p.ParseExpression(0)
+		values[ident] = value
+
+		if p.PeekToken().Type == token.COMMA {
+			p.ExpectToken(token.COMMA)
+		}
+	}
+
+	p.ExpectToken(token.RBRACE)
+
+	return ast.NodeMapDecl{
+		Token: currentToken,
+		Map:   values,
+	}
+}
+
+func (p *Parser) ParseStructExpr(left ast.Node) ast.Node {
+	currentToken := p.CurrentToken()
+	values := p.ParseMapDecl()
+
+	return ast.NodeStructExpr{
+		Token:      currentToken,
+		Identifier: left,
+		Values:     values,
 	}
 }

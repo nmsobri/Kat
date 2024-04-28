@@ -415,3 +415,36 @@ func (nie NodeIndexExpr) Node(indent string) string {
 func (nie NodeIndexExpr) String() string {
 	return ""
 }
+
+// #######################################################
+// ##################### Node Map Decl ###################
+// #######################################################
+type NodeMapDecl struct {
+	Token token.Token
+	Map   map[Node]Node
+}
+
+func (nmd NodeMapDecl) Node(indent string) string {
+	return ""
+}
+
+func (nmd NodeMapDecl) String() string {
+	return ""
+}
+
+// #######################################################
+// ################### Node Struct Expr ##################
+// #######################################################
+type NodeStructExpr struct {
+	Token      token.Token
+	Identifier Node
+	Values     Node
+}
+
+func (nmd NodeStructExpr) Node(indent string) string {
+	return ""
+}
+
+func (nmd NodeStructExpr) String() string {
+	return ""
+}
