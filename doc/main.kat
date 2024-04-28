@@ -12,6 +12,7 @@ fn say(greet) {
 
 fn main() {
     let arr = [1,2,3,4,5]
+    let foo = arr[0]
     let map = {name: "sobri", location: "penang"}
 
     let user = User{name:"Sobri", age:82, job:"Programmer"}

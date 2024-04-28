@@ -1,5 +1,19 @@
 package parser
 
+// when you at the beginning of parsing, and you want to parse the
+//whole expression, precedence should be 0
+
+// when you at the beginning of parsing, and you want to parse until
+//certain operator, precedence should be of that operator precedence
+
+// if you at the middle of expression and you want to call the parse
+//expression function again and make the expression left associative,
+//precedence should be : previous operator precedence + 1
+
+// if you at the middle of expression and you want to call the parse
+//expression function again and make the expression right associative,
+//precedence should be : previous operator precedence - 1
+
 import (
 	"kat/ast"
 	"kat/lexer"
@@ -34,13 +48,14 @@ func New(lex *lexer.Lexer) *Parser {
 	p.PrefixFunctions[token.FALSE] = p.ParseNodeBoolean
 	p.PrefixFunctions[token.MINUS] = p.ParsePrefixExpr
 	p.PrefixFunctions[token.BANG] = p.ParsePrefixExpr
-	p.PrefixFunctions[token.IDENTIFIER] = p.ParseIdentifier
 	p.PrefixFunctions[token.CONST] = p.ParseConstDecl
 	p.PrefixFunctions[token.IMPORT] = p.ParseImportDecl
 	p.PrefixFunctions[token.STRING] = p.ParseNodeString
 	p.PrefixFunctions[token.STRUCT] = p.ParseNodeStruct
 	p.PrefixFunctions[token.FUNCTION] = p.ParseNodeFunction
 	p.PrefixFunctions[token.LET] = p.ParseLetDecl
+	p.PrefixFunctions[token.IDENTIFIER] = p.ParseIdentifier
+	p.PrefixFunctions[token.LBRACKET] = p.ParseArrayDecl
 
 	// Register Infixes
 	p.InfixFunctions[token.PLUS] = p.ParseBinaryExpr
@@ -382,12 +397,34 @@ func (p *Parser) ParseFunctionCall(left ast.Node) ast.Node {
 }
 
 func (p *Parser) ParseLetDecl() ast.Node {
+	currentToken := p.CurrentToken()
 	ident := p.ParseExpression(token.Precedence.ASSIGNMENT)
 	p.ExpectToken(token.EQUAL)
-	value := p.ParseExpression(token.Precedence.ASSIGNMENT)
+	value := p.ParseExpression(0)
 
 	return ast.NodeLetDecl{
+		Token:      currentToken,
 		Identifier: ident,
 		Value:      value,
+	}
+}
+func (p *Parser) ParseArrayDecl() ast.Node {
+	currentToken := p.CurrentToken()
+
+	values := make([]ast.Node, 0, 0)
+
+	for p.PeekToken().Type != token.RBRACKET {
+		values = append(values, p.ParseExpression(0))
+
+		if p.PeekToken().Type == token.COMMA {
+			p.ExpectToken(token.COMMA)
+		}
+	}
+
+	p.ExpectToken(token.RBRACKET)
+
+	return ast.NodeArrayDecl{
+		Token: currentToken,
+		Value: values,
 	}
 }

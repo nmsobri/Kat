@@ -366,7 +366,11 @@ func (nfc NodeFunctionCall) String() string {
 	return ""
 }
 
+// #######################################################
+// ##################### Node Let Decl ###################
+// #######################################################
 type NodeLetDecl struct {
+	Token      token.Token
 	Identifier Node
 	Value      Node
 }
@@ -376,5 +380,21 @@ func (nld NodeLetDecl) Node(indent string) string {
 }
 
 func (nld NodeLetDecl) String() string {
+	return ""
+}
+
+// #######################################################
+// #################### Node Array Decl ##################
+// #######################################################
+type NodeArrayDecl struct {
+	Token token.Token
+	Value []Node
+}
+
+func (nad NodeArrayDecl) Node(indent string) string {
+	return ""
+}
+
+func (nad NodeArrayDecl) String() string {
 	return ""
 }
