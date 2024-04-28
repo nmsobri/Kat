@@ -70,6 +70,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.InfixFunctions[token.GREATEREQUAL] = p.ParseBinaryExpr
 	p.InfixFunctions[token.EQUAL] = p.ParseBinaryExpr
 	p.InfixFunctions[token.LPAREN] = p.ParseFunctionCall
+	p.InfixFunctions[token.LBRACKET] = p.ParseIndexExpr
 
 	p.NextToken = p.Lex.NextToken()
 
@@ -411,7 +412,7 @@ func (p *Parser) ParseLetDecl() ast.Node {
 func (p *Parser) ParseArrayDecl() ast.Node {
 	currentToken := p.CurrentToken()
 
-	values := make([]ast.Node, 0, 0)
+	values := make([]ast.Node, 0)
 
 	for p.PeekToken().Type != token.RBRACKET {
 		values = append(values, p.ParseExpression(0))
@@ -426,5 +427,17 @@ func (p *Parser) ParseArrayDecl() ast.Node {
 	return ast.NodeArrayDecl{
 		Token: currentToken,
 		Value: values,
+	}
+}
+
+func (p *Parser) ParseIndexExpr(left ast.Node) ast.Node {
+	currentToken := p.CurrentToken()
+	index := p.ParseExpression(0)
+	p.ExpectToken(token.RBRACKET)
+
+	return ast.NodeIndexExpr{
+		Token:      currentToken,
+		Identifier: left,
+		Index:      index,
 	}
 }

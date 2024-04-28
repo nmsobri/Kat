@@ -398,3 +398,20 @@ func (nad NodeArrayDecl) Node(indent string) string {
 func (nad NodeArrayDecl) String() string {
 	return ""
 }
+
+// #######################################################
+// #################### Node Index Expr ##################
+// #######################################################
+type NodeIndexExpr struct {
+	Token      token.Token
+	Identifier Node
+	Index      Node
+}
+
+func (nie NodeIndexExpr) Node(indent string) string {
+	return ""
+}
+
+func (nie NodeIndexExpr) String() string {
+	return ""
+}

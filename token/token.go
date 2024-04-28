@@ -14,6 +14,7 @@ var Precedence = struct {
 	PREFIX      int
 	POSTFIX     int
 	CALL        int
+	INDEX       int
 }{
 	ASSIGNMENT:  1,
 	CONDITIONAL: 2,
@@ -24,6 +25,7 @@ var Precedence = struct {
 	PREFIX:      7,
 	POSTFIX:     8,
 	CALL:        9,
+	INDEX:       10,
 }
 
 type TokenType string
@@ -139,6 +141,7 @@ func GetPrecedence(tok Token) int {
 		BANG:         Precedence.PREFIX,
 		QUESTION:     Precedence.CONDITIONAL,
 		LPAREN:       Precedence.CALL,
+		LBRACKET:     Precedence.INDEX,
 	}
 
 	precedence, ok := precedences[tok.Type]
