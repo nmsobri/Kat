@@ -13,7 +13,7 @@ type Lexer struct {
 }
 
 func New(input []byte) *Lexer {
-	return &Lexer{Col: -1, Line: 0, Offset: 0, Input: input}
+	return &Lexer{Col: 0, Line: 0, Offset: 0, Input: input}
 }
 
 func (l *Lexer) MakeToken(col int, val string, tokenType token.TokenType) token.Token {
@@ -26,9 +26,7 @@ func (l *Lexer) MakeToken(col int, val string, tokenType token.TokenType) token.
 }
 
 func (l *Lexer) NextToken() token.Token {
-	l.NextChar()
 	l.SkipWhitespace()
-
 	ch := l.Char()
 	var t token.Token
 
@@ -149,17 +147,33 @@ func (l *Lexer) NextToken() token.Token {
 			}
 
 			t = l.MakeToken(col, string(dig), tok)
+
 		} else if l.IsChar(ch) {
 			col := l.Col
 			unknown := l.MakeIdentifier()
 			symbol := string(unknown)
 			t = l.MakeToken(col, symbol, token.Symbol(symbol))
+
 		} else {
 			col := l.Col
 			invalid := l.MakeInvalid()
 			t = l.MakeToken(col, string(invalid), token.INVALID)
 		}
 	}
+
+	l.NextChar()
+	return t
+}
+
+func (l *Lexer) PeekToken(count int) token.Token {
+	start := l.Col
+	var t token.Token
+
+	for i := 0; i < count; i++ {
+		t = l.NextToken()
+	}
+
+	l.Col = start
 
 	return t
 }
@@ -216,7 +230,7 @@ func (l *Lexer) SkipWhitespace() {
 
 func (l *Lexer) MakeString() []byte {
 	start := l.Col
-	l.NextChar()
+	l.NextChar() // skip first `"` so when we find next `"` it mark end of string
 
 	for !l.IsEndOfString() {
 		l.NextChar()
@@ -228,7 +242,6 @@ func (l *Lexer) MakeString() []byte {
 
 func (l *Lexer) MakeDigit() []byte {
 	start := l.Col
-	l.NextChar()
 
 	for l.IsDouble(l.Char()) {
 		l.NextChar()
@@ -242,7 +255,6 @@ func (l *Lexer) MakeDigit() []byte {
 
 func (l *Lexer) MakeIdentifier() []byte {
 	start := l.Col
-	l.NextChar()
 
 	for l.IsAlphaNum(l.Char()) {
 		l.NextChar()
