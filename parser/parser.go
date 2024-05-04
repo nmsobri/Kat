@@ -57,6 +57,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.PrefixFunctions[token.IDENTIFIER] = p.ParseIdentifier
 	p.PrefixFunctions[token.LBRACKET] = p.ParseArrayDecl
 	p.PrefixFunctions[token.LBRACE] = p.ParseMapDecl
+	p.PrefixFunctions[token.IF] = p.ParseIfStmt
 
 	// Register Infixes
 	p.InfixFunctions[token.PLUS] = p.ParseBinaryExpr
@@ -72,6 +73,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.InfixFunctions[token.EQUAL] = p.ParseBinaryExpr
 	p.InfixFunctions[token.LPAREN] = p.ParseFunctionCall
 	p.InfixFunctions[token.LBRACKET] = p.ParseIndexExpr
+	//p.InfixFunctions[token.LBRACE] = p.ParseStructExpr
 	p.InfixFunctions[token.LBRACE] = p.ParseStructExpr
 
 	p.NextToken = p.Lex.NextToken()
@@ -102,6 +104,16 @@ func (p *Parser) PeekToken() token.Token {
 	return p.NextToken
 }
 
+func (p *Parser) PeekAhead(count int) token.Token {
+	if count == 0 {
+		return p.Token
+	} else if count == 1 {
+		return p.NextToken
+	}
+
+	return p.Lex.PeekToken(count - 1)
+}
+
 func (*Parser) GetOperatorPrecedence(tok token.Token) int {
 	return token.GetPrecedence(tok)
 }
@@ -110,11 +122,9 @@ func (p *Parser) ParseProgram() ast.NodeProgram {
 	program := ast.NodeProgram{}
 
 	for p.CurrentToken().Type != token.EOF {
-		program.Body = append(program.Body, p.ParseExpression(0))
+		program.Body = append(program.Body, p.ParseExpression(token.Precedence.LOWEST))
 
-		for p.PeekToken().Type == token.EOL {
-			p.ConsumeToken() // consume EOL
-		}
+		p.skipEOL()
 
 		if p.PeekToken().Type == token.EOF {
 			p.ConsumeToken()
@@ -246,7 +256,7 @@ func (p *Parser) ParseConditionExpr(left ast.Node) ast.Node {
 	currentToken := p.CurrentToken()
 	thenArm := p.ParseExpression(p.GetOperatorPrecedence(currentToken))
 
-	p.ConsumeToken() // consume the `:`
+	p.ExpectToken(token.COLON) // consume the `:`
 
 	elseArm := p.ParseExpression(p.GetOperatorPrecedence(currentToken) - 1)
 
@@ -264,7 +274,7 @@ func (p *Parser) ParseConstDecl() ast.Node {
 
 	p.ExpectToken(token.EQUAL) // consume `=`
 
-	value := p.ParseExpression(0)
+	value := p.ParseExpression(token.Precedence.LOWEST)
 
 	return ast.NodeConstDeclaration{
 		Token:      currentToken,
@@ -277,7 +287,7 @@ func (p *Parser) ParseImportDecl() ast.Node {
 	currentToken := p.CurrentToken()
 	p.ExpectToken(token.LPAREN) // consume `(`
 
-	path := p.ParseExpression(0)
+	path := p.ParseExpression(token.Precedence.LOWEST)
 
 	p.ExpectToken(token.RPAREN) // consume `)`
 
@@ -300,9 +310,7 @@ func (p *Parser) ParseNodeStruct() ast.Node {
 
 	identifier := p.ParseExpression(token.Precedence.INDEX)
 
-	for p.PeekToken().Type == token.EOL {
-		p.ConsumeToken()
-	}
+	p.skipEOL()
 
 	p.ExpectToken(token.LBRACE) // consume `{`
 
@@ -312,15 +320,13 @@ func (p *Parser) ParseNodeStruct() ast.Node {
 	}
 
 	for p.PeekToken().Type != token.RBRACE {
-		if p.PeekToken().Type == token.EOL {
-			p.ConsumeToken()
-		}
+		p.skipEOL()
 
 		if p.PeekToken().Type == token.RBRACE {
 			break
 		}
 
-		identifier := p.ParseExpression(0)
+		identifier := p.ParseExpression(token.Precedence.LOWEST)
 
 		structProperties.Properties = append(structProperties.Properties, identifier)
 
@@ -346,15 +352,7 @@ func (p *Parser) ParseNodeFunction() ast.Node {
 	arguements := p.ParseNodeFunctionArguement()
 	p.ExpectToken(token.RPAREN)
 
-	p.ExpectToken(token.LBRACE)
-
-	if p.PeekToken().Type == token.EOL {
-		p.ExpectToken(token.EOL) // consume `\n`
-	}
-
-	body := p.ParseNodeFunctionBody()
-
-	p.ExpectToken(token.RBRACE)
+	body := p.parseBlockStmt()
 
 	return ast.NodeFunction{
 		Token:      currentToken,
@@ -368,7 +366,7 @@ func (p *Parser) ParseNodeFunctionArguement() []ast.Node {
 	arguements := make([]ast.Node, 0)
 
 	for p.PeekToken().Type != token.RPAREN {
-		identifier := p.ParseExpression(0)
+		identifier := p.ParseExpression(token.Precedence.LOWEST)
 		arguements = append(arguements, identifier)
 
 		if p.PeekToken().Type == token.COMMA {
@@ -377,21 +375,6 @@ func (p *Parser) ParseNodeFunctionArguement() []ast.Node {
 	}
 
 	return arguements
-}
-
-func (p *Parser) ParseNodeFunctionBody() []ast.Node {
-	body := make([]ast.Node, 0)
-
-	for p.PeekToken().Type != token.RBRACE {
-		expression := p.ParseExpression(0)
-		body = append(body, expression)
-
-		for p.PeekToken().Type == token.EOL {
-			p.ExpectToken(token.EOL)
-		}
-	}
-
-	return body
 }
 
 func (p *Parser) ParseFunctionCall(left ast.Node) ast.Node {
@@ -410,7 +393,7 @@ func (p *Parser) ParseLetDecl() ast.Node {
 	currentToken := p.CurrentToken()
 	ident := p.ParseExpression(token.Precedence.ASSIGNMENT)
 	p.ExpectToken(token.EQUAL)
-	value := p.ParseExpression(0)
+	value := p.ParseExpression(token.Precedence.LOWEST)
 
 	return ast.NodeLetDecl{
 		Token:      currentToken,
@@ -418,13 +401,14 @@ func (p *Parser) ParseLetDecl() ast.Node {
 		Value:      value,
 	}
 }
+
 func (p *Parser) ParseArrayDecl() ast.Node {
 	currentToken := p.CurrentToken()
 
 	values := make([]ast.Node, 0)
 
 	for p.PeekToken().Type != token.RBRACKET {
-		values = append(values, p.ParseExpression(0))
+		values = append(values, p.ParseExpression(token.Precedence.LOWEST))
 
 		if p.PeekToken().Type == token.COMMA {
 			p.ExpectToken(token.COMMA)
@@ -441,7 +425,7 @@ func (p *Parser) ParseArrayDecl() ast.Node {
 
 func (p *Parser) ParseIndexExpr(left ast.Node) ast.Node {
 	currentToken := p.CurrentToken()
-	index := p.ParseExpression(0)
+	index := p.ParseExpression(token.Precedence.LOWEST)
 	p.ExpectToken(token.RBRACKET)
 
 	return ast.NodeIndexExpr{
@@ -456,9 +440,9 @@ func (p *Parser) ParseMapDecl() ast.Node {
 	values := make(map[ast.Node]ast.Node, 0)
 
 	for p.PeekToken().Type != token.RBRACE {
-		ident := p.ParseExpression(0)
+		ident := p.ParseExpression(token.Precedence.LOWEST)
 		p.ExpectToken(token.COLON)
-		value := p.ParseExpression(0)
+		value := p.ParseExpression(token.Precedence.LOWEST)
 		values[ident] = value
 
 		if p.PeekToken().Type == token.COMMA {
@@ -483,4 +467,72 @@ func (p *Parser) ParseStructExpr(left ast.Node) ast.Node {
 		Identifier: left,
 		Values:     values,
 	}
+}
+
+func (p *Parser) ParseIfStmt() ast.Node {
+	currentToken := p.CurrentToken()
+
+	condition := p.ParseExpression(token.Precedence.LOWEST + 1)
+
+	p.skipEOL()
+
+	ifBody := p.parseBlockStmt()
+
+	ifArm := ast.NodeProgram{
+		//Token: token.Token{},
+		Body: ifBody,
+	}
+
+	if p.PeekAhead(1).Type == token.ELSE && p.PeekAhead(2).Type != token.IF {
+		p.ExpectToken(token.ELSE)
+
+		elseArm := ast.NodeProgram{
+			//Token: token.Token{},
+			Body: p.parseBlockStmt(),
+		}
+
+		return ast.NodeConditionalExpr{
+			Token:     currentToken,
+			Condition: condition,
+			ThenArm:   ifArm,
+			ElseArm:   elseArm,
+		}
+	}
+
+	if p.PeekAhead(1).Type == token.ELSE && p.PeekAhead(2).Type == token.IF {
+		p.ExpectToken(token.ELSE)
+		elseArm := p.ParseExpression(0)
+
+		return ast.NodeConditionalExpr{
+			Token:     currentToken,
+			Condition: condition,
+			ThenArm:   ifArm,
+			ElseArm:   elseArm,
+		}
+	}
+
+	return nil
+}
+
+func (p *Parser) skipEOL() {
+	for p.PeekToken().Type == token.EOL {
+		p.ConsumeToken() // consume EOL
+	}
+}
+
+func (p *Parser) parseBlockStmt() []ast.Node {
+	p.ExpectToken(token.LBRACE)
+	p.skipEOL()
+
+	body := make([]ast.Node, 0)
+
+	for p.PeekToken().Type != token.RBRACE {
+		expression := p.ParseExpression(token.Precedence.LOWEST)
+		body = append(body, expression)
+		p.skipEOL()
+	}
+
+	p.ExpectToken(token.RBRACE)
+
+	return body
 }

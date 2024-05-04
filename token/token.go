@@ -5,6 +5,7 @@ import (
 )
 
 var Precedence = struct {
+	LOWEST      int
 	ASSIGNMENT  int
 	CONDITIONAL int
 	COMPARISON  int
@@ -16,6 +17,7 @@ var Precedence = struct {
 	CALL        int
 	INDEX       int
 }{
+	LOWEST:      0,
 	ASSIGNMENT:  1,
 	CONDITIONAL: 2,
 	COMPARISON:  3,
@@ -128,11 +130,13 @@ func Symbol(key string) TokenType {
 // Precedence is only for infix expression i guess
 func GetPrecedence(tok Token) int {
 	precedences := map[TokenType]int{
+		LBRACE:       Precedence.ASSIGNMENT,
 		EQUAL:        Precedence.ASSIGNMENT,
 		LESS:         Precedence.COMPARISON,
 		GREATER:      Precedence.COMPARISON,
 		LESSEQUAL:    Precedence.COMPARISON,
 		GREATEREQUAL: Precedence.COMPARISON,
+		EQUALEQUAL:   Precedence.COMPARISON,
 		PLUS:         Precedence.SUM,
 		MINUS:        Precedence.SUM,
 		MULTIPLY:     Precedence.PRODUCT,
@@ -143,7 +147,6 @@ func GetPrecedence(tok Token) int {
 		QUESTION:     Precedence.CONDITIONAL,
 		LPAREN:       Precedence.CALL,
 		LBRACKET:     Precedence.INDEX,
-		LBRACE:       Precedence.INDEX,
 	}
 
 	precedence, ok := precedences[tok.Type]

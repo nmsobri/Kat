@@ -32,6 +32,12 @@ fn main() {
 
     let i =  1 * 2 + 1
 
+    if 10 > 2 {
+        fmt.Println("bigger than 2")
+    } else {
+        fmt.Println("smaller than 2")
+    }
+
     if i < 3 {
         fmt.Print("lower than 3\n")
     } else if i < 5 {

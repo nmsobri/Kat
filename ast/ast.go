@@ -98,6 +98,24 @@ func (nd NodeDouble) String() string {
 }
 
 // #######################################################
+// ##################### Node String #####################
+// #######################################################
+type NodeString struct {
+	Token token.Token
+	Value string
+}
+
+func (ns NodeString) Node(indent string) string {
+	sb := strings.Builder{}
+	sb.WriteString(fmt.Sprintf("NodeString (%s)", ns.Value))
+	return sb.String()
+}
+
+func (ns NodeString) String() string {
+	return "NodeString"
+}
+
+// #######################################################
 // #################### Node BinaryExpr ##################
 // #######################################################
 type NodeBinaryExpr struct {
@@ -252,24 +270,6 @@ func (nid NodeImportDeclaration) Node(indent string) string {
 
 func (nid NodeImportDeclaration) String() string {
 	return "NodeImportDeclaration"
-}
-
-// #######################################################
-// ##################### Node String #####################
-// #######################################################
-type NodeString struct {
-	Token token.Token
-	Value string
-}
-
-func (ns NodeString) Node(indent string) string {
-	sb := strings.Builder{}
-	sb.WriteString(fmt.Sprintf("NodeString (%s)", ns.Value))
-	return sb.String()
-}
-
-func (ns NodeString) String() string {
-	return "NodeString"
 }
 
 // #######################################################
