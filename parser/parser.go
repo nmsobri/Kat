@@ -58,6 +58,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.PrefixFunctions[token.LBRACKET] = p.ParseArrayDecl
 	p.PrefixFunctions[token.LBRACE] = p.ParseMapDecl
 	p.PrefixFunctions[token.IF] = p.ParseIfStmt
+	p.PrefixFunctions[token.FOR] = p.parseForStmt
 
 	// Register Infixes
 	p.InfixFunctions[token.PLUS] = p.ParseBinaryExpr
@@ -73,8 +74,9 @@ func New(lex *lexer.Lexer) *Parser {
 	p.InfixFunctions[token.EQUAL] = p.ParseBinaryExpr
 	p.InfixFunctions[token.LPAREN] = p.ParseFunctionCall
 	p.InfixFunctions[token.LBRACKET] = p.ParseIndexExpr
-	//p.InfixFunctions[token.LBRACE] = p.ParseStructExpr
 	p.InfixFunctions[token.LBRACE] = p.ParseStructExpr
+	p.InfixFunctions[token.MINUSMINUS] = p.parsePostfixExpr
+	p.InfixFunctions[token.PLUSPLUS] = p.parsePostfixExpr
 
 	p.NextToken = p.Lex.NextToken()
 
@@ -531,4 +533,24 @@ func (p *Parser) parseBlockStmt() []ast.Node {
 	p.ExpectToken(token.RBRACE)
 
 	return body
+}
+
+func (p *Parser) parseForStmt() ast.Node {
+	currentToken := p.CurrentToken()
+	condition := p.ParseExpression(token.Precedence.LOWEST + 1)
+	body := p.parseBlockStmt()
+
+	return ast.NodeForLoopStmt{
+		Token:     currentToken,
+		Condition: condition,
+		Body:      body,
+	}
+}
+
+func (p *Parser) parsePostfixExpr(left ast.Node) ast.Node {
+	return ast.NodePostfixExpr{
+		Token:    p.CurrentToken(),
+		Left:     left,
+		Operator: p.CurrentToken().Value,
+	}
 }

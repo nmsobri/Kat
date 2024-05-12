@@ -189,6 +189,23 @@ func (ni NodeIdentifier) String() string {
 }
 
 // #######################################################
+// ################## Node For Loop Stmt #################
+// #######################################################
+type NodeForLoopStmt struct {
+	Token     token.Token
+	Condition Node
+	Body      []Node
+}
+
+func (nfl NodeForLoopStmt) Node(indent string) string {
+	return ""
+}
+
+func (nfl NodeForLoopStmt) String() string {
+	return "NodeForLoopStmt"
+}
+
+// #######################################################
 // ################### Node Conditional ##################
 // #######################################################
 type NodeConditionalExpr struct {
@@ -446,5 +463,39 @@ func (nmd NodeStructExpr) Node(indent string) string {
 }
 
 func (nmd NodeStructExpr) String() string {
+	return "NodeStructExpr"
+}
+
+// #######################################################
+// ################### Node Prefix Expr ##################
+// #######################################################
+type NodePrefixExpr struct {
+	Token    token.Token
+	Operator string
+	Right    Node
+}
+
+func (npe NodePrefixExpr) Node(indent string) string {
 	return ""
+}
+
+func (npe NodePrefixExpr) String() string {
+	return "NodePrefixExpr"
+}
+
+// #######################################################
+// ################## Node Postfix Expr ##################
+// #######################################################
+type NodePostfixExpr struct {
+	Token    token.Token
+	Left     Node
+	Operator string
+}
+
+func (npe NodePostfixExpr) Node(indent string) string {
+	return ""
+}
+
+func (npe NodePostfixExpr) String() string {
+	return "NodePostfixExpr"
 }
