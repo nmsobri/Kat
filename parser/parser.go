@@ -476,11 +476,16 @@ func (p *Parser) ParseIfStmt() ast.Node {
 
 	p.skipEOL()
 
-	ifBody := p.parseBlockStmt()
-
 	ifArm := ast.NodeProgram{
 		//Token: token.Token{},
-		Body: ifBody,
+		Body: p.parseBlockStmt(),
+	}
+
+	nodeIf := ast.NodeConditionalExpr{
+		Token:     currentToken,
+		Condition: condition,
+		ThenArm:   ifArm,
+		ElseArm:   nil,
 	}
 
 	if p.PeekAhead(1).Type == token.ELSE && p.PeekAhead(2).Type != token.IF {
@@ -491,27 +496,18 @@ func (p *Parser) ParseIfStmt() ast.Node {
 			Body: p.parseBlockStmt(),
 		}
 
-		return ast.NodeConditionalExpr{
-			Token:     currentToken,
-			Condition: condition,
-			ThenArm:   ifArm,
-			ElseArm:   elseArm,
-		}
+		nodeIf.ElseArm = elseArm
+		return nodeIf
 	}
 
 	if p.PeekAhead(1).Type == token.ELSE && p.PeekAhead(2).Type == token.IF {
 		p.ExpectToken(token.ELSE)
-		elseArm := p.ParseExpression(0)
-
-		return ast.NodeConditionalExpr{
-			Token:     currentToken,
-			Condition: condition,
-			ThenArm:   ifArm,
-			ElseArm:   elseArm,
-		}
+		p.ExpectToken(token.IF)
+		nodeIf.ElseArm = p.ParseIfStmt()
+		return nodeIf
 	}
 
-	return nil
+	return nodeIf
 }
 
 func (p *Parser) skipEOL() {
