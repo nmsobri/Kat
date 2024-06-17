@@ -41,9 +41,60 @@ type Token struct {
 
 func (t Token) String() string {
 	return fmt.Sprintf(
-		"Token{ Line: %d, Col: %d, Type: %s, Value: `%s` }",
+		"Token{ Line: %d, Col: %d, TokenString: %s, Value: `%s` }",
 		t.Row, t.Col, t.Type, t.Value,
 	)
+}
+
+func (tt TokenType) Str() string {
+	return TokenString[tt]
+}
+
+var TokenString = map[TokenType]string{
+	PLUS:         "+",
+	MINUS:        "-",
+	NEGATE:       "-",
+	BANG:         "!",
+	QUESTION:     "?",
+	MULTIPLY:     "*",
+	DIVIDE:       "/",
+	MODULO:       "%",
+	EQUAL:        "=",
+	LESS:         "<",
+	GREATER:      ">",
+	LBRACKET:     "[",
+	RBRACKET:     "]",
+	LBRACE:       "{",
+	RBRACE:       "}",
+	COLON:        ":",
+	LPAREN:       "(",
+	RPAREN:       ")",
+	COMMA:        ",",
+	SEMICOLON:    ";",
+	DOT:          ".",
+	PLUSPLUS:     "++",
+	MINUSMINUS:   "--",
+	EQUALEQUAL:   "==",
+	GREATEREQUAL: ">=",
+	LESSEQUAL:    "<=",
+	STRING:       "string",
+	INTEGER:      "integer",
+	DOUBLE:       "double",
+	TRUE:         "true",
+	FALSE:        "false",
+	LET:          "let",
+	CONST:        "const",
+	IF:           "if",
+	ELSE:         "else",
+	FOR:          "for",
+	SELF:         "self",
+	IMPORT:       "import",
+	STRUCT:       "struct",
+	FUNCTION:     "function",
+	IDENTIFIER:   "identifier",
+	EOL:          "eol",
+	EOF:          "eof",
+	INVALID:      "invalid",
 }
 
 const (
@@ -76,6 +127,7 @@ const (
 	EQUALEQUAL   = "EQUALEQUAL"   // ==
 	GREATEREQUAL = "GREATEREQUAL" // >=
 	LESSEQUAL    = "LESSEQUAL"    // <=
+	COMMENT      = "COMMENT"      // //
 
 	// Literal
 	STRING  = "STRING"
@@ -83,7 +135,6 @@ const (
 	DOUBLE  = "DOUBLE"
 
 	// Keyword
-
 	TRUE       = "TRUE"       // true
 	FALSE      = "FALSE"      // false
 	LET        = "LET"        // let
@@ -130,10 +181,11 @@ func Symbol(key string) TokenType {
 // Precedence is only for infix expression i guess
 func GetPrecedence(tok Token) int {
 	precedences := map[TokenType]int{
-		LBRACE:       Precedence.ASSIGNMENT,
-		EQUAL:        Precedence.ASSIGNMENT,
-		LESS:         Precedence.COMPARISON,
-		GREATER:      Precedence.COMPARISON,
+		LBRACE:  Precedence.ASSIGNMENT,
+		EQUAL:   Precedence.ASSIGNMENT,
+		LESS:    Precedence.COMPARISON,
+		GREATER: Precedence.COMPARISON,
+
 		LESSEQUAL:    Precedence.COMPARISON,
 		GREATEREQUAL: Precedence.COMPARISON,
 		EQUALEQUAL:   Precedence.COMPARISON,
@@ -147,6 +199,8 @@ func GetPrecedence(tok Token) int {
 		QUESTION:     Precedence.CONDITIONAL,
 		LPAREN:       Precedence.CALL,
 		LBRACKET:     Precedence.INDEX,
+		MINUSMINUS:   Precedence.PREFIX,
+		PLUSPLUS:     Precedence.PREFIX,
 	}
 
 	precedence, ok := precedences[tok.Type]

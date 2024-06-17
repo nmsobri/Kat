@@ -1,0 +1,11 @@
+// let age = 99
+let name = "John"
+
+if true {
+    fmt.Println("true")
+} else {
+    fmt.Println("false")
+}
+
+// let foo = "bar"
+let blah = "hahahah"

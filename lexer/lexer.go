@@ -81,7 +81,20 @@ func (l *Lexer) NextToken() token.Token {
 		t = l.MakeToken(l.Col, string(ch), token.MULTIPLY)
 
 	case '/':
-		t = l.MakeToken(l.Col, string(ch), token.DIVIDE)
+		if l.PeekChar() == '/' {
+			l.NextChar()
+			l.NextChar()
+
+			for l.PeekToken(1).Type != token.EOL &&
+				l.PeekToken(1).Type != token.EOF {
+				t = l.NextToken()
+			}
+
+			l.NextToken()     // consume the EOL or EOF
+			t = l.NextToken() // advance to next token
+		} else {
+			t = l.MakeToken(l.Col, string(ch), token.DIVIDE)
+		}
 
 	case '%':
 		t = l.MakeToken(l.Col, string(ch), token.MODULO)

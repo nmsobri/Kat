@@ -48,10 +48,15 @@ fn main() {
 
     for i > 0 {
         fmt.Print(i)
-        i--
+        1 + i--
+        1 + --i
+		---3
+		--1 + 2
+		++5--
+		--6--
     }
 
-    for let j = 0; j < 5; j++ {
-        fmt.Print(j)
-    }
+//    for let j = 0; j < 5; j++ {
+//        fmt.Print(j)
+//    }
 }

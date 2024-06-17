@@ -13,5 +13,5 @@ func main() {
 	p := parser.New(l)
 	program := p.ParseProgram()
 
-	fmt.Println(program.Node(""))
+	fmt.Println(program.String())
 }
