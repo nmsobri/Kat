@@ -24,7 +24,7 @@ fn main() {
     let map = {name: "sobri", location: "penang"}
     let name = map["name"]
 
-    let user = User{name:"Sobri", age:82, job:"Programmer"}
+    let user = User{name:"Sobri", age:99, job:"Programmer"}
     user.setAge(99)
     user.info()
 
@@ -56,7 +56,7 @@ fn main() {
 		--6--
     }
 
-//    for let j = 0; j < 5; j++ {
-//        fmt.Print(j)
-//    }
+    for let j = 0; j < 5; j++ {
+        fmt.Print(j)
+    }
 }

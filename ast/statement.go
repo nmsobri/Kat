@@ -21,15 +21,28 @@ func (np NodeProgram) String() string {
 }
 
 // #######################################################
-// ##################### Node For Stmt ###################
+// ################## Node Modern For Stmt ###############
 // #######################################################
-type NodeForStmt struct {
+type NodeModernForStmt struct {
 	Token     token.Token
 	Condition Expr
 	Body      BlockStmt
 }
 
-func (nf NodeForStmt) stmt() {}
+func (nf NodeModernForStmt) stmt() {}
+
+// #######################################################
+// ################# Node Classic For Stmt ###############
+// #######################################################
+type NodeClassicForStmt struct {
+	Token     token.Token
+	Condition Expr
+	PreExpr   Stmt
+	PostExpr  Expr
+	Body      BlockStmt
+}
+
+func (nf NodeClassicForStmt) stmt() {}
 
 // #######################################################
 // #################### Node Const Stmt ##################

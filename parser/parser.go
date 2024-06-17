@@ -544,15 +544,11 @@ func (p *Parser) parseBlockStmt() ast.BlockStmt {
 }
 
 func (p *Parser) parseForStmt() ast.Stmt {
-	currentToken := p.CurrentToken()
-	condition := p.ParseExpression(token.Precedence.LOWEST + 1)
-	body := p.parseBlockStmt()
-
-	return ast.NodeForStmt{
-		Token:     currentToken,
-		Condition: condition,
-		Body:      body,
+	if p.PeekToken().Type == token.LET {
+		return p.parseClassicForStmt()
 	}
+
+	return p.parseModernForStmt()
 }
 
 func (p *Parser) parsePostfixExpr(left ast.Expr) ast.Expr {
@@ -574,4 +570,37 @@ func (p *Parser) ParseStatement() ast.Stmt {
 
 func (p *Parser) ParseExpressionStatement() ast.Stmt {
 	return ast.NodeExprStmt{Expression: p.ParseExpression(token.Precedence.LOWEST)}
+}
+
+func (p *Parser) parseModernForStmt() ast.Stmt {
+	currentToken := p.CurrentToken()
+	condition := p.ParseExpression(token.Precedence.LOWEST + 1)
+	body := p.parseBlockStmt()
+
+	return ast.NodeModernForStmt{
+		Token:     currentToken,
+		Condition: condition,
+		Body:      body,
+	}
+}
+
+func (p *Parser) parseClassicForStmt() ast.Stmt {
+	currentToken := p.CurrentToken()
+	preExpr := p.ParseStatement()
+	p.ExpectToken(token.SEMICOLON)
+
+	condition := p.ParseExpression(token.Precedence.LOWEST)
+	p.ExpectToken(token.SEMICOLON)
+
+	postExpr := p.ParseExpression(token.Precedence.LOWEST + 1)
+
+	body := p.parseBlockStmt()
+
+	return ast.NodeClassicForStmt{
+		Token:     currentToken,
+		Condition: condition,
+		PreExpr:   preExpr,
+		PostExpr:  postExpr,
+		Body:      body,
+	}
 }

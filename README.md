@@ -4,7 +4,7 @@ First stage, the code will be evaluated at run time ( interpreted )
 Second stage would be compile it to custom byte code and then run it  
 Hopefully it will run the following code  
 
-```
+```go
 const fmt = import("fmt")
 
 struct User {
@@ -27,15 +27,23 @@ fn say(greet) {
 
 fn main() {
     let arr = [1,2,3,4,5]
+    let foo = arr[0]
     let map = {name: "sobri", location: "penang"}
+    let name = map["name"]
 
-    let user = User{name:"Sobri", age:82, job:"Programmer"}
+    let user = User{name:"Sobri", age:99, job:"Programmer"}
     user.setAge(99)
     user.info()
 
     say("hello world")
 
     let i =  1 * 2 + 1
+
+    if 10 > 2 {
+        fmt.Println("bigger than 2")
+    } else {
+        fmt.Println("smaller than 2")
+    }
 
     if i < 3 {
         fmt.Print("lower than 3\n")
@@ -47,7 +55,12 @@ fn main() {
 
     for i > 0 {
         fmt.Print(i)
-        i--
+        1 + i--
+        1 + --i
+		---3
+		--1 + 2
+		++5--
+		--6--
     }
 
     for let j = 0; j < 5; j++ {
