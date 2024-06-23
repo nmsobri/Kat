@@ -4,161 +4,153 @@ import (
 	"kat/token"
 )
 
+// Simulate Tagged Union
+// This mean following nodes can either be Expression or Node
+type Expression struct{}
+
+func (e Expression) expr() {}
+func (e Expression) node() {}
+
 // #######################################################
 // ################### Node Boolean #####################
 // #######################################################
 type NodeBoolean struct {
+	Expression
 	Token token.Token
 	Value bool
 }
-
-func (nb NodeBoolean) expr() {}
 
 // #######################################################
 // ##################### Node Integer ####################
 // #######################################################
 type NodeInteger struct {
+	Expression
 	Token token.Token
 	Value int64
 }
 
-func (ni NodeInteger) expr() {}
-
 // #######################################################
-// ###################### Node Double ####################
+// ###################### Node Float #####################
 // #######################################################
-type NodeDouble struct {
+type NodeFloat struct {
+	Expression
 	Token token.Token
 	Value float64
 }
-
-func (nd NodeDouble) expr() {}
 
 // #######################################################
 // ##################### Node String #####################
 // #######################################################
 type NodeString struct {
+	Expression
 	Token token.Token
 	Value string
 }
-
-func (ns NodeString) expr() {}
 
 // #######################################################
 // #################### Node Index Expr ##################
 // #######################################################
 type NodeIndexExpr struct {
+	Expression
 	Token      token.Token
 	Identifier Expr
 	Index      Expr
 }
 
-func (nie NodeIndexExpr) expr() {}
-
 // #######################################################
 // ################### Node Prefix Expr ##################
 // #######################################################
 type NodePrefixExpr struct {
+	Expression
 	Token    token.Token
 	Operator string
 	Right    Expr
 }
-
-func (npe NodePrefixExpr) expr() {}
 
 // #######################################################
 // ################## Node Postfix Expr ##################
 // #######################################################
 type NodePostfixExpr struct {
+	Expression
 	Token    token.Token
 	Left     Expr
 	Operator string
 }
 
-func (npe NodePostfixExpr) expr() {}
-
 // #######################################################
 // #################### Node BinaryExpr ##################
 // #######################################################
 type NodeBinaryExpr struct {
+	Expression
 	Token    token.Token
 	Left     Expr
 	Right    Expr
 	Operator string
 }
 
-func (nbe NodeBinaryExpr) expr() {}
-
 // #######################################################
 // ################### Node Function Call ################
 // #######################################################
 type NodeFunctionCall struct {
+	Expression
 	Token token.Token
 	Left  Expr
 	Right []Expr
 }
 
-func (nfc NodeFunctionCall) expr() {}
-
 // #######################################################
 // ################### Node Struct Expr ##################
 // #######################################################
 type NodeStructExpr struct {
+	Expression
 	Token      token.Token
 	Identifier Expr
 	Values     Expr
 }
 
-func (ns NodeStructExpr) expr() {}
-
 // #######################################################
 // ################### Node Conditional ##################
 // #######################################################
 type NodeTernaryExpr struct {
+	Expression
 	Token     token.Token
 	Condition Expr
 	ThenArm   Expr
 	ElseArm   Expr
 }
 
-func (nce NodeTernaryExpr) expr() {}
-
 // #######################################################
 // ##################### Node Map Expr ###################
 // #######################################################
 type NodeMapExpr struct {
+	Expression
 	Token token.Token
 	Map   map[Expr]Expr
 }
-
-func (nmd NodeMapExpr) expr() {}
 
 // #######################################################
 // #################### Node Array Expr ##################
 // #######################################################
 type NodeArrayExpr struct {
+	Expression
 	Token token.Token
 	Value []Expr
 }
-
-func (na NodeArrayExpr) expr() {}
 
 // #######################################################
 // #################### Node Identifier###################
 // #######################################################
 type NodeIdentifier struct {
+	Expression
 	Token token.Token
 	Name  string
 }
-
-func (ni NodeIdentifier) expr() {}
 
 // #######################################################
 // ################### Node Import Expr ##################
 // #######################################################
 type NodeImportExpr struct {
+	Expression
 	Token token.Token
 	Path  Expr
 }
-
-func (ni NodeImportExpr) expr() {}

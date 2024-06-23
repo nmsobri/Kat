@@ -6,17 +6,23 @@ import (
 	"regexp"
 )
 
+// Simulate Tagged Union
+// This mean following nodes can either be Statement or Node
+type Statement struct{}
+
+func (s Statement) stmt() {}
+func (s Statement) node() {}
+
 // #######################################################
 // ##################### Node Tree ####################
 // #######################################################
 type NodeProgram struct {
+	Statement
 	Body []Stmt // Statement
 }
 
-func (np NodeProgram) stmt() {}
-
 func (np NodeProgram) String() string {
-	litter.Config.FieldExclusions = regexp.MustCompile(`^(Token)$`)
+	litter.Config.FieldExclusions = regexp.MustCompile(`^(Token|Statement|Expression)$`)
 	return litter.Sdump(np)
 }
 
@@ -24,17 +30,17 @@ func (np NodeProgram) String() string {
 // ################## Node Modern For Stmt ###############
 // #######################################################
 type NodeModernForStmt struct {
+	Statement
 	Token     token.Token
 	Condition Expr
 	Body      BlockStmt
 }
 
-func (nf NodeModernForStmt) stmt() {}
-
 // #######################################################
 // ################# Node Classic For Stmt ###############
 // #######################################################
 type NodeClassicForStmt struct {
+	Statement
 	Token     token.Token
 	Condition Expr
 	PreExpr   Stmt
@@ -42,89 +48,79 @@ type NodeClassicForStmt struct {
 	Body      BlockStmt
 }
 
-func (nf NodeClassicForStmt) stmt() {}
-
 // #######################################################
 // #################### Node Const Stmt ##################
 // #######################################################
 type NodeConstStmt struct {
+	Statement
 	Token      token.Token
 	Identifier Expr
 	Value      Expr
 }
 
-func (nc NodeConstStmt) stmt() {}
-
 // #######################################################
 // ################## Node Struct Stmt ###################
 // #######################################################
 type NodeStructStmt struct {
+	Statement
 	Token      token.Token
 	Identifier Expr
 	Properties NodeStructProperties
 }
 
-func (ns NodeStructStmt) stmt() {}
-
 // #######################################################
 // ################## Node Struct Prop ###################
 // #######################################################
 type NodeStructProperties struct {
+	Statement
 	Token      token.Token
 	Properties []Expr
 }
-
-func (nsp NodeStructProperties) stmt() {}
 
 // #######################################################
 // ################ Node Function Stmt ###################
 // #######################################################
 type NodeFunctionStmt struct {
+	Statement
 	Token      token.Token
 	Identifier Expr
 	Arguements []Expr
 	Body       BlockStmt
 }
 
-func (nf NodeFunctionStmt) stmt() {}
-
 // #######################################################
 // ##################### Node Let Stmt ###################
 // #######################################################
 type NodeLetStmt struct {
+	Statement
 	Token      token.Token
 	Identifier Expr
 	Value      Expr
 }
 
-func (nld NodeLetStmt) stmt() {}
-
 // #######################################################
 // #################### Node Expr Stmt ###################
 // #######################################################
 type NodeExprStmt struct {
-	Expression Expr
+	Statement
+	Expr Expr
 }
-
-func (ne NodeExprStmt) stmt() {}
 
 // #######################################################
 // ################# Node conditional stmt ###############
 // #######################################################
 type NodeConditionalStmt struct {
+	Statement
 	Token     token.Token
 	Condition Expr
 	ThenArm   Stmt
 	ElseArm   Stmt
 }
 
-func (nc NodeConditionalStmt) stmt() {}
-
 // #######################################################
 // #################### Node Block stmt ##################
 // #######################################################
 type BlockStmt struct {
+	Statement
 	Body []Stmt
 }
-
-func (nb BlockStmt) stmt() {}

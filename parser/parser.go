@@ -199,7 +199,7 @@ func (p *Parser) ParseNodeDouble() ast.Expr {
 		log.Fatalf("Parser::Error:%s\n", e)
 	}
 
-	return ast.NodeDouble{
+	return ast.NodeFloat{
 		Token: p.CurrentToken(),
 		Value: val,
 	}
@@ -511,7 +511,7 @@ func (p *Parser) ParseIfStmt() ast.Stmt {
 		p.ExpectToken(token.ELSE)
 		p.ExpectToken(token.IF)
 
-		//_nodeIf, _ := nodeIf.Expression.(ast.NodeTernaryExpr)
+		//_nodeIf, _ := nodeIf._Expression.(ast.NodeTernaryExpr)
 		//_nodeIf.ElseArm = p.ParseIfStmt()
 		nodeIf.ElseArm = p.ParseIfStmt()
 
@@ -569,7 +569,7 @@ func (p *Parser) ParseStatement() ast.Stmt {
 }
 
 func (p *Parser) ParseExpressionStatement() ast.Stmt {
-	return ast.NodeExprStmt{Expression: p.ParseExpression(token.Precedence.LOWEST)}
+	return ast.NodeExprStmt{Expr: p.ParseExpression(token.Precedence.LOWEST)}
 }
 
 func (p *Parser) parseModernForStmt() ast.Stmt {

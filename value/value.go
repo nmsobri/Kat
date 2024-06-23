@@ -6,11 +6,11 @@ type Value interface {
 	String() string
 }
 
-type ValueDouble struct {
+type ValueFloat struct {
 	Value float64
 }
 
-func (vf ValueDouble) String() string {
+func (vf ValueFloat) String() string {
 	return fmt.Sprintf("%.2f", vf.Value)
 }
 
@@ -20,4 +20,20 @@ type ValueInt struct {
 
 func (vi ValueInt) String() string {
 	return fmt.Sprintf("%d", vi.Value)
+}
+
+type ValueBool struct {
+	Value bool
+}
+
+func (vb ValueBool) String() string {
+	return fmt.Sprintf("%t", vb.Value)
+}
+
+type ValueString struct {
+	Value string
+}
+
+func (vs ValueString) String() string {
+	return vs.Value
 }

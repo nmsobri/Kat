@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"kat/environment"
 	"kat/evaluator"
 	"kat/lexer"
 	"kat/parser"
@@ -17,6 +18,9 @@ func main() {
 	fmt.Println(program.String())
 
 	e := evaluator.New(program)
-	res := e.Eval(program)
-	fmt.Println("result:", res)
+	env := environment.New()
+	res := e.Eval(program, env)
+
+	fmt.Println()
+	fmt.Println("Result:", res)
 }
