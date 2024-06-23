@@ -125,6 +125,7 @@ const (
 	PLUSPLUS     = "PLUSPLUS"     // ++
 	MINUSMINUS   = "MINUSMINUS"   // --
 	EQUALEQUAL   = "EQUALEQUAL"   // ==
+	NOTEQUAL     = "NOTEQUAL"     // ==
 	GREATEREQUAL = "GREATEREQUAL" // >=
 	LESSEQUAL    = "LESSEQUAL"    // <=
 	COMMENT      = "COMMENT"      // //
@@ -146,6 +147,7 @@ const (
 	IMPORT     = "IMPORT"     // import
 	STRUCT     = "STRUCT"     // struct
 	FUNCTION   = "FUNCTION"   // fn
+	RETURN     = "RETURN"     // return
 	IDENTIFIER = "IDENTIFIER" // any
 
 	// Special
@@ -156,6 +158,8 @@ const (
 
 func Symbol(key string) TokenType {
 	keywords := map[string]TokenType{
+		"true":   TRUE,
+		"false":  FALSE,
 		"let":    LET,
 		"const":  CONST,
 		"if":     IF,
@@ -165,8 +169,7 @@ func Symbol(key string) TokenType {
 		"import": IMPORT,
 		"struct": STRUCT,
 		"fn":     FUNCTION,
-		"true":   TRUE,
-		"false":  FALSE,
+		"return": RETURN,
 	}
 
 	keyword, ok := keywords[key]
@@ -181,26 +184,31 @@ func Symbol(key string) TokenType {
 // Precedence is only for infix expression i guess
 func GetPrecedence(tok Token) int {
 	precedences := map[TokenType]int{
-		LBRACE:  Precedence.ASSIGNMENT,
-		EQUAL:   Precedence.ASSIGNMENT,
-		LESS:    Precedence.COMPARISON,
-		GREATER: Precedence.COMPARISON,
+		LBRACE: Precedence.ASSIGNMENT,
+		EQUAL:  Precedence.ASSIGNMENT,
 
+		LESS:         Precedence.COMPARISON,
+		GREATER:      Precedence.COMPARISON,
 		LESSEQUAL:    Precedence.COMPARISON,
 		GREATEREQUAL: Precedence.COMPARISON,
 		EQUALEQUAL:   Precedence.COMPARISON,
-		PLUS:         Precedence.SUM,
-		MINUS:        Precedence.SUM,
-		MULTIPLY:     Precedence.PRODUCT,
-		DIVIDE:       Precedence.PRODUCT,
-		MODULO:       Precedence.PRODUCT,
-		NEGATE:       Precedence.PREFIX,
-		BANG:         Precedence.PREFIX,
-		QUESTION:     Precedence.CONDITIONAL,
-		LPAREN:       Precedence.CALL,
-		LBRACKET:     Precedence.INDEX,
-		MINUSMINUS:   Precedence.PREFIX,
-		PLUSPLUS:     Precedence.PREFIX,
+		NOTEQUAL:     Precedence.COMPARISON,
+
+		PLUS:  Precedence.SUM,
+		MINUS: Precedence.SUM,
+
+		MULTIPLY: Precedence.PRODUCT,
+		DIVIDE:   Precedence.PRODUCT,
+		MODULO:   Precedence.PRODUCT,
+
+		NEGATE: Precedence.PREFIX,
+		BANG:   Precedence.PREFIX,
+
+		QUESTION:   Precedence.CONDITIONAL,
+		LPAREN:     Precedence.CALL,
+		LBRACKET:   Precedence.INDEX,
+		MINUSMINUS: Precedence.PREFIX,
+		PLUSPLUS:   Precedence.PREFIX,
 	}
 
 	precedence, ok := precedences[tok.Type]

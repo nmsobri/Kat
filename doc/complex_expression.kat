@@ -1,0 +1,8 @@
+fn main(x, y) {
+    let a = x
+    let b = y
+    let c = 30
+    return a + b * c
+}
+
+main(1, 2)

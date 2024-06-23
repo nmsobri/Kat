@@ -50,6 +50,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.StatementFunctions[token.LET] = p.ParseLetDecl
 	p.StatementFunctions[token.IF] = p.ParseIfStmt
 	p.StatementFunctions[token.FOR] = p.parseForStmt
+	p.StatementFunctions[token.RETURN] = p.parseReturnStmt
 
 	// Register Prefix functions
 	p.PrefixFunctions[token.SELF] = p.ParseIdentifier
@@ -84,6 +85,8 @@ func New(lex *lexer.Lexer) *Parser {
 	p.InfixFunctions[token.LBRACE] = p.ParseStructExpr
 	p.InfixFunctions[token.MINUSMINUS] = p.parsePostfixExpr
 	p.InfixFunctions[token.PLUSPLUS] = p.parsePostfixExpr
+	p.InfixFunctions[token.EQUALEQUAL] = p.ParseBinaryExpr
+	p.InfixFunctions[token.NOTEQUAL] = p.ParseBinaryExpr
 
 	p.NextToken = p.Lex.NextToken()
 	p.Token = p.NextToken
@@ -402,9 +405,9 @@ func (p *Parser) ParseFunctionCall(left ast.Expr) ast.Expr {
 	p.ExpectToken(token.RPAREN)
 
 	return ast.NodeFunctionCall{
-		Token: currentToken,
-		Left:  left,
-		Right: functionArgs,
+		Token:      currentToken,
+		Identifer:  left,
+		Parameters: functionArgs,
 	}
 }
 
@@ -527,11 +530,11 @@ func (p *Parser) skipEOL() {
 	}
 }
 
-func (p *Parser) parseBlockStmt() ast.BlockStmt {
+func (p *Parser) parseBlockStmt() ast.NodeBlockStmt {
 	p.ExpectToken(token.LBRACE)
 	p.skipEOL()
 
-	body := ast.BlockStmt{}
+	body := ast.NodeBlockStmt{}
 
 	for p.PeekToken().Type != token.RBRACE {
 		body.Body = append(body.Body, p.ParseStatement())
@@ -602,5 +605,15 @@ func (p *Parser) parseClassicForStmt() ast.Stmt {
 		PreExpr:   preExpr,
 		PostExpr:  postExpr,
 		Body:      body,
+	}
+}
+
+func (p *Parser) parseReturnStmt() ast.Stmt {
+	currentToken := p.CurrentToken()
+	expr := p.ParseExpression(token.Precedence.LOWEST)
+
+	return ast.NodeReturnStmt{
+		Token: currentToken,
+		Value: expr,
 	}
 }

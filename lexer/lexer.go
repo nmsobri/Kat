@@ -59,6 +59,15 @@ func (l *Lexer) NextToken() token.Token {
 			t = l.MakeToken(l.Col, string(ch), token.EQUAL)
 		}
 
+	case '!':
+		if l.PeekChar() == '=' {
+			col := l.Col
+			l.NextChar()
+			t = l.MakeToken(col, string(l.Input[col:col+2]), token.NOTEQUAL)
+		} else {
+			t = l.MakeToken(l.Col, string(ch), token.BANG)
+		}
+
 	case '<':
 		if l.PeekChar() == '=' {
 			col := l.Col
@@ -116,9 +125,6 @@ func (l *Lexer) NextToken() token.Token {
 
 	case ')':
 		t = l.MakeToken(l.Col, string(ch), token.RPAREN)
-
-	case '!':
-		t = l.MakeToken(l.Col, string(ch), token.BANG)
 
 	case '?':
 		t = l.MakeToken(l.Col, string(ch), token.QUESTION)

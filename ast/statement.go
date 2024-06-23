@@ -14,7 +14,7 @@ func (s Statement) stmt() {}
 func (s Statement) node() {}
 
 // #######################################################
-// ##################### Node Tree ####################
+// ##################### Node Program#####################😀
 // #######################################################
 type NodeProgram struct {
 	Statement
@@ -33,7 +33,7 @@ type NodeModernForStmt struct {
 	Statement
 	Token     token.Token
 	Condition Expr
-	Body      BlockStmt
+	Body      NodeBlockStmt
 }
 
 // #######################################################
@@ -45,11 +45,11 @@ type NodeClassicForStmt struct {
 	Condition Expr
 	PreExpr   Stmt
 	PostExpr  Expr
-	Body      BlockStmt
+	Body      NodeBlockStmt
 }
 
 // #######################################################
-// #################### Node Const Stmt ##################
+// #################### Node Const Stmt ##################😀
 // #######################################################
 type NodeConstStmt struct {
 	Statement
@@ -78,18 +78,18 @@ type NodeStructProperties struct {
 }
 
 // #######################################################
-// ################ Node Function Stmt ###################
+// ################ Node Function Stmt ###################😀
 // #######################################################
 type NodeFunctionStmt struct {
 	Statement
 	Token      token.Token
 	Identifier Expr
 	Arguements []Expr
-	Body       BlockStmt
+	Body       NodeBlockStmt
 }
 
 // #######################################################
-// ##################### Node Let Stmt ###################
+// ##################### Node Let Stmt ###################😀
 // #######################################################
 type NodeLetStmt struct {
 	Statement
@@ -99,7 +99,7 @@ type NodeLetStmt struct {
 }
 
 // #######################################################
-// #################### Node Expr Stmt ###################
+// #################### Node Expr Stmt ###################😀
 // #######################################################
 type NodeExprStmt struct {
 	Statement
@@ -118,9 +118,18 @@ type NodeConditionalStmt struct {
 }
 
 // #######################################################
-// #################### Node Block stmt ##################
+// #################### Node Return stmt #################😀
 // #######################################################
-type BlockStmt struct {
+type NodeReturnStmt struct {
+	Statement
+	Token token.Token
+	Value Expr
+}
+
+// #######################################################
+// #################### Node Block stmt ##################😀
+// #######################################################
+type NodeBlockStmt struct {
 	Statement
 	Body []Stmt
 }
