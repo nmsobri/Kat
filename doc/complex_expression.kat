@@ -1,4 +1,7 @@
-fn main(x, y) {
+let x = 10
+let y = 2
+
+fn main(x,y) {
     let a = x
     let b = y
     let c = 30
@@ -6,3 +9,6 @@ fn main(x, y) {
 }
 
 main(1, 2)
+
+let a = 88
+a

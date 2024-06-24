@@ -329,10 +329,23 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 	case ast.NodeBlockStmt:
 		for _, stmt := range stmt.Body {
 			result = e.Eval(stmt, env)
+
+			if _, ok := result.(value.ValueReturn); ok {
+				return result.(value.ValueReturn).Value
+			}
 		}
 
 	case ast.NodeReturnStmt:
 		return value.ValueReturn{e.Eval(stmt.Value, env)}
+
+	case ast.NodeConditionalStmt:
+		condition := e.Eval(stmt.Condition, env)
+
+		if util.IsTruthy(condition) {
+			return e.Eval(stmt.ThenArm, env)
+		} else {
+			return e.Eval(stmt.ElseArm, env)
+		}
 
 	default:
 		msg := fmt.Sprintf("Unrecognized statement type: %T", stmt)
