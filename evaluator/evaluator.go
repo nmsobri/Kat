@@ -425,6 +425,14 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 
 		return value.ValueKeyVal[value.Value]{keyVal}
 
+	case ast.NodeModernForStmt:
+		condition := e.Eval(stmt.Condition, env)
+
+		for util.IsTruthy(condition) {
+			e.Eval(stmt.Body, env)
+			condition = e.Eval(stmt.Condition, env)
+		}
+
 	default:
 		msg := fmt.Sprintf("Unrecognized statement type: %T", stmt)
 		log.Fatal(msg)
