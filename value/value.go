@@ -3,6 +3,7 @@ package value
 import (
 	"fmt"
 	"kat/ast"
+	"strings"
 )
 
 type Value interface {
@@ -59,6 +60,30 @@ type ValueFunction struct {
 
 func (vn ValueFunction) String() string {
 	return "fn"
+}
+
+type ValueStruct[T any] struct {
+	Name string
+	Prop []string
+	ValueKeyVal[T]
+}
+
+func (vs ValueStruct[T]) String() string {
+	valStruct := make([]string, 0)
+
+	for _, k := range vs.Prop {
+		valStruct = append(valStruct, fmt.Sprintf("%s: %s", k, vs.Map[k]))
+	}
+
+	return fmt.Sprintf("%s{%s}", vs.Name, strings.Join(valStruct, ", "))
+}
+
+type ValueKeyVal[T any] struct {
+	Map map[string]T
+}
+
+func (vs ValueKeyVal[T]) String() string {
+	return "valuekeyval"
 }
 
 type ValueReturn struct {

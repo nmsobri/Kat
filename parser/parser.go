@@ -336,10 +336,7 @@ func (p *Parser) ParseNodeStruct() ast.Stmt {
 
 	p.ExpectToken(token.LBRACE) // consume `{`
 
-	structProperties := ast.NodeStructProperties{
-		Token:      currentToken,
-		Properties: make([]ast.Expr, 0),
-	}
+	structProperties := make([]ast.Expr, 0)
 
 	for p.PeekToken().Type != token.RBRACE {
 		p.skipEOL()
@@ -350,7 +347,7 @@ func (p *Parser) ParseNodeStruct() ast.Stmt {
 
 		identifier := p.ParseExpression(token.Precedence.LOWEST)
 
-		structProperties.Properties = append(structProperties.Properties, identifier)
+		structProperties = append(structProperties, identifier)
 
 		if p.PeekToken().Type == token.COMMA {
 			p.ConsumeToken() // consume `,`
@@ -485,9 +482,9 @@ func (p *Parser) ParseStructExpr(left ast.Expr) ast.Expr {
 	values := p.ParseMapExpr()
 
 	return ast.NodeStructExpr{
-		Token:      currentToken,
-		Identifier: left,
-		Values:     values,
+		Token:  currentToken,
+		Name:   left,
+		Values: values,
 	}
 }
 

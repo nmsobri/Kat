@@ -1,0 +1,9 @@
+struct User {
+    name,
+    age,
+    job,
+}
+
+let u = User{name:"Sobri", age:99, job:"Programmer"}
+
+u

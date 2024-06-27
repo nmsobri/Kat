@@ -23,3 +23,13 @@ func IsTruthy(v value.Value) bool {
 
 	return false
 }
+
+func InArray[T comparable](arr []T, key T) bool {
+	for _, v := range arr {
+		if v == key {
+			return true
+		}
+	}
+
+	return false
+}

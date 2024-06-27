@@ -78,7 +78,7 @@ type NodePostfixExpr struct {
 }
 
 // #######################################################
-// #################### Node BinaryExpr ##################
+// #################### Node BinaryExpr ##################😀
 // #######################################################
 type NodeBinaryExpr struct {
 	Expression
@@ -99,13 +99,13 @@ type NodeFunctionCall struct {
 }
 
 // #######################################################
-// ################### Node Struct Expr ##################
+// ################### Node Struct Expr ##################😀
 // #######################################################
 type NodeStructExpr struct {
 	Expression
-	Token      token.Token
-	Identifier Expr
-	Values     Expr
+	Token  token.Token
+	Name   Expr
+	Values Expr
 }
 
 // #######################################################
@@ -138,7 +138,7 @@ type NodeArrayExpr struct {
 }
 
 // #######################################################
-// #################### Node Identifier###################😀
+// ####################### Node Name######################😀
 // #######################################################
 type NodeIdentifier struct {
 	Expression

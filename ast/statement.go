@@ -59,21 +59,12 @@ type NodeConstStmt struct {
 }
 
 // #######################################################
-// ################## Node Struct Stmt ###################
+// ################## Node Struct Stmt ###################😀
 // #######################################################
 type NodeStructStmt struct {
 	Statement
 	Token      token.Token
 	Identifier Expr
-	Properties NodeStructProperties
-}
-
-// #######################################################
-// ################## Node Struct Prop ###################
-// #######################################################
-type NodeStructProperties struct {
-	Statement
-	Token      token.Token
 	Properties []Expr
 }
 

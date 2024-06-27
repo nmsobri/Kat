@@ -347,6 +347,84 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 			return e.Eval(stmt.ElseArm, env)
 		}
 
+	case ast.NodeStructStmt:
+		identifier, ok := stmt.Identifier.(ast.NodeIdentifier)
+
+		if !ok {
+			msg := fmt.Sprintf("Invalid identifier: %s", stmt.Identifier)
+			log.Fatal(msg)
+		}
+
+		_, ok = env.Get(identifier.Name)
+
+		if ok {
+			msg := fmt.Sprintf("Symbol %s already exists", identifier.Name)
+			log.Fatal(msg)
+		}
+
+		props := make([]string, 0)
+		valKeyVal := make(map[string]byte)
+
+		for _, p := range stmt.Properties {
+			prop, ok := p.(ast.NodeIdentifier)
+
+			if !ok {
+				msg := fmt.Sprintf("Invalid property: %s", p)
+				log.Fatal(msg)
+			}
+
+			valKeyVal[prop.Name] = 1
+			props = append(props, prop.Name)
+		}
+
+		env.Set(identifier.Name, value.ValueStruct[byte]{identifier.Name, props, value.ValueKeyVal[byte]{Map: valKeyVal}})
+
+	case ast.NodeStructExpr:
+		ident, ok := stmt.Name.(ast.NodeIdentifier)
+
+		if !ok {
+			msg := fmt.Sprintf("Invalid identifier: %s", stmt.Name)
+			log.Fatal(msg)
+		}
+
+		structStmt, ok := env.Get(ident.Name)
+		structStmtProp := structStmt.(value.ValueStruct[byte]).Prop
+
+		if !ok {
+			msg := fmt.Sprintf("Struct %s not found", ident.Name)
+			log.Fatal(msg)
+		}
+
+		keyMap := e.Eval(stmt.Values, env)
+		props := keyMap.(value.ValueKeyVal[value.Value])
+
+		for k := range props.Map {
+			ok := util.InArray[string](structStmtProp, k)
+
+			if !ok {
+				msg := fmt.Sprintf("Unknown field %s on %s", k, ident.Name)
+				log.Fatal(msg)
+			}
+		}
+
+		return value.ValueStruct[value.Value]{ident.Name, structStmtProp, value.ValueKeyVal[value.Value]{props.Map}}
+
+	case ast.NodeMapExpr:
+		keyVal := make(map[string]value.Value)
+
+		for k, v := range stmt.Map {
+			key, ok := k.(ast.NodeIdentifier)
+
+			if !ok {
+				msg := fmt.Sprintf("Invalid struct key: %s", k)
+				log.Fatal(msg)
+			}
+
+			keyVal[key.Name] = e.Eval(v, env)
+		}
+
+		return value.ValueKeyVal[value.Value]{keyVal}
+
 	default:
 		msg := fmt.Sprintf("Unrecognized statement type: %T", stmt)
 		log.Fatal(msg)

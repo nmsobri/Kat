@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	source := util.ReadFile("./doc/complex_expression.kat")
+	source := util.ReadFile("./doc/struct.kat")
 
 	l := lexer.New(source)
 	p := parser.New(l)
