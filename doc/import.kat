@@ -1,0 +1,3 @@
+const fmt = import("fmt")
+
+fmt.return10()

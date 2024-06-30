@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"kat/ast"
 	"kat/environment"
+	"kat/lexer"
+	"kat/parser"
 	"kat/util"
 	"kat/value"
+	"os"
 )
 
 type Evaluator struct {
@@ -267,6 +270,20 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 
 			return value.FALSE
 
+		case ".":
+			left := e.Eval(stmt.Left, env)
+			right := stmt.Right.(ast.NodeIdentifier).Name
+
+			env := left.(value.ValueEnv).Value.(*environment.Environment)
+			val, ok := env.Get(right)
+
+			if !ok {
+				msg := fmt.Sprintf("Symbol %s is not found", right)
+				e.Error(msg)
+			}
+
+			return val
+
 		default:
 			msg := fmt.Sprintf("Unrecognized operator: %s", stmt.Operator)
 			e.Error(msg)
@@ -322,21 +339,17 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 		env.Set(ident, val)
 
 	case ast.NodeFunctionCall:
-		ident := stmt.Identifer.(ast.NodeIdentifier).Name
-
-		val, ok := env.Get(ident)
-
-		if !ok {
-			msg := fmt.Sprintf("Function %s is not exists", ident)
-			e.Error(msg)
-		}
-
+		val := e.Eval(stmt.Identifer, env)
 		params := make([]value.Value, len(stmt.Parameters))
 		for i, param := range stmt.Parameters {
 			params[i] = e.Eval(param, env)
 		}
 
-		fn := val.(value.ValueFunction)
+		fn, ok := val.(value.ValueFunction)
+
+		if !ok {
+			return result
+		}
 		newEnv := environment.NewWithParent(env)
 
 		for i, arg := range fn.Args {
@@ -550,6 +563,30 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 			msg := fmt.Sprintf("Unsupported operator: %s", stmt.Operator)
 			e.Error(msg)
 		}
+
+	case ast.NodeImportExpr:
+		path := stmt.Path.(ast.NodeString).Value
+		fileName := fmt.Sprintf("%s.kat", path)
+		realPath := fmt.Sprintf("%s/%s/%s", os.Getenv("PWD"), "stdlib", fileName)
+
+		source := util.ReadFile(realPath)
+		l := lexer.New(source)
+		p := parser.New(l)
+
+		program := p.ParseProgram()
+
+		e := New(program)
+		env := environment.New()
+		e.Eval(program, env)
+
+		if e.IsError() {
+			fmt.Println("Evaluation Errors:")
+			for _, err := range e.Errors {
+				fmt.Println(err)
+			}
+		}
+
+		return value.ValueEnv{env}
 
 	default:
 		msg := fmt.Sprintf("Unrecognized statement type: %T", stmt)

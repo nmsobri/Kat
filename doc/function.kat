@@ -10,5 +10,3 @@ fn Person.print(self) {
 fn main() {
     let i = 10
 }
-
-

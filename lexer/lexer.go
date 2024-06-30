@@ -256,7 +256,7 @@ func (l *Lexer) MakeString() []byte {
 	}
 
 	end := l.Col
-	return l.Input[start : end+1]
+	return l.Input[start+1 : end]
 }
 
 func (l *Lexer) MakeDigit() []byte {

@@ -323,7 +323,7 @@ func (p *Parser) ParseNodeString() ast.Expr {
 func (p *Parser) ParseNodeStruct() ast.Stmt {
 	currentToken := p.CurrentToken()
 
-	identifier := p.ParseExpression(token.Precedence.INDEX)
+	identifier := p.ParseExpression(token.Precedence.EXPR)
 
 	p.skipEOL()
 
@@ -358,7 +358,7 @@ func (p *Parser) ParseNodeStruct() ast.Stmt {
 
 func (p *Parser) ParseNodeFunction() ast.Stmt {
 	currentToken := p.CurrentToken()
-	_identifier := p.ParseExpression(token.Precedence.INDEX)
+	_identifier := p.ParseExpression(token.Precedence.EXPR)
 	identifier := _identifier.(ast.NodeIdentifier)
 
 	if p.PeekToken().Type == token.DOT {

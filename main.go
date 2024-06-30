@@ -6,10 +6,11 @@ import (
 	"kat/evaluator"
 	"kat/lexer"
 	"kat/parser"
+	"kat/util"
 )
 
 func main() {
-	source := util.ReadFile("./doc/function.kat")
+	source := util.ReadFile("./doc/import.kat")
 
 	l := lexer.New(source)
 	p := parser.New(l)

@@ -93,3 +93,11 @@ type ValueReturn struct {
 func (vn ValueReturn) String() string {
 	return fmt.Sprintf("%v", vn.Value)
 }
+
+type ValueEnv struct {
+	Value any
+}
+
+func (vn ValueEnv) String() string {
+	return fmt.Sprintf("%v", vn.Value)
+}
