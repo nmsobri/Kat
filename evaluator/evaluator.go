@@ -485,11 +485,7 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 			switch leftVal.(type) {
 			case value.ValueInt:
 				env.Set(left.Name, value.ValueInt{leftVal.(value.ValueInt).Value + 1})
-				return value.ValueInt{leftVal.(value.ValueInt).Value + 1}
-
-			case value.ValueFloat:
-				env.Set(left.Name, value.ValueFloat{leftVal.(value.ValueFloat).Value + 1})
-				return value.ValueFloat{leftVal.(value.ValueFloat).Value + 1}
+				return value.ValueInt{leftVal.(value.ValueInt).Value}
 
 			default:
 				msg := fmt.Sprintf("Unsupported operator: %s for type %T", stmt.Operator, leftVal)
@@ -500,11 +496,54 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 			switch leftVal.(type) {
 			case value.ValueInt:
 				env.Set(left.Name, value.ValueInt{leftVal.(value.ValueInt).Value - 1})
-				return value.ValueInt{leftVal.(value.ValueInt).Value - 1}
+				return value.ValueInt{leftVal.(value.ValueInt).Value}
 
-			case value.ValueFloat:
-				env.Set(left.Name, value.ValueFloat{leftVal.(value.ValueFloat).Value - 1})
-				return value.ValueFloat{leftVal.(value.ValueFloat).Value - 1}
+			default:
+				msg := fmt.Sprintf("Unsupported operator: %s for type %T", stmt.Operator, leftVal)
+				e.Error(msg)
+			}
+
+		default:
+			msg := fmt.Sprintf("Unsupported operator: %s", stmt.Operator)
+			e.Error(msg)
+		}
+
+	case ast.NodePrefixExpr:
+		right, ok := stmt.Right.(ast.NodeIdentifier)
+
+		if !ok {
+			msg := fmt.Sprintf("Invalid identifier: %s", stmt.Right)
+			e.Error(msg)
+		}
+
+		rightVal, ok := env.Get(right.Name)
+
+		if !ok {
+			msg := fmt.Sprintf("Variable %s is not found", right.Name)
+			e.Error(msg)
+		}
+
+		switch stmt.Operator {
+		case "++":
+			switch rightVal.(type) {
+			case value.ValueInt:
+				env.Set(right.Name, value.ValueInt{rightVal.(value.ValueInt).Value + 1})
+				return value.ValueInt{rightVal.(value.ValueInt).Value + 1}
+
+			default:
+				msg := fmt.Sprintf("Unsupported operator: %s for type %T", stmt.Operator, rightVal)
+				e.Error(msg)
+			}
+
+		case "--":
+			switch rightVal.(type) {
+			case value.ValueInt:
+				env.Set(right.Name, value.ValueInt{rightVal.(value.ValueInt).Value - 1})
+				return value.ValueInt{rightVal.(value.ValueInt).Value - 1}
+
+			default:
+				msg := fmt.Sprintf("Unsupported operator: %s for type %T", stmt.Operator, rightVal)
+				e.Error(msg)
 			}
 
 		default:
