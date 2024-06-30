@@ -273,8 +273,16 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 		case ".":
 			left := e.Eval(stmt.Left, env)
 			right := stmt.Right.(ast.NodeIdentifier).Name
+			var env *environment.Environment
 
-			env := left.(value.ValueEnv).Value.(*environment.Environment)
+			switch left.(type) {
+			case value.ValueNil:
+				return result
+
+			case value.ValueEnv:
+				env = left.(value.ValueEnv).Value.(*environment.Environment)
+			}
+
 			val, ok := env.Get(right)
 
 			if !ok {
@@ -315,8 +323,9 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 		val, ok := env.Get(stmt.Name)
 
 		if !ok {
-			msg := fmt.Sprintf("Variable %s is not found", stmt.Name)
+			msg := fmt.Sprintf("Symbol %s is not found", stmt.Name)
 			e.Error(msg)
+			return result
 		}
 
 		return val
