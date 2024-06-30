@@ -207,6 +207,7 @@ func GetPrecedence(tok Token) int {
 		QUESTION:   Precedence.CONDITIONAL,
 		LPAREN:     Precedence.CALL,
 		LBRACKET:   Precedence.INDEX,
+		DOT:        Precedence.INDEX,
 		MINUSMINUS: Precedence.PREFIX,
 		PLUSPLUS:   Precedence.PREFIX,
 	}

@@ -87,6 +87,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.InfixFunctions[token.PLUSPLUS] = p.parsePostfixExpr
 	p.InfixFunctions[token.EQUALEQUAL] = p.ParseBinaryExpr
 	p.InfixFunctions[token.NOTEQUAL] = p.ParseBinaryExpr
+	p.InfixFunctions[token.DOT] = p.ParseBinaryExpr
 
 	p.NextToken = p.Lex.NextToken()
 	p.Token = p.NextToken
@@ -261,14 +262,6 @@ func (p *Parser) ParseIdentifier() ast.Expr {
 	currentToken := p.CurrentToken()
 	identifier := currentToken.Value
 
-	if p.PeekToken().Type == token.DOT {
-		p.ExpectToken(token.DOT)        // consume `.`
-		p.ExpectToken(token.IDENTIFIER) // consume the identifier
-
-		identifier += "."
-		identifier += p.CurrentToken().Value
-	}
-
 	return ast.NodeIdentifier{
 		Token: currentToken,
 		Name:  identifier,
@@ -365,7 +358,16 @@ func (p *Parser) ParseNodeStruct() ast.Stmt {
 
 func (p *Parser) ParseNodeFunction() ast.Stmt {
 	currentToken := p.CurrentToken()
-	identifier := p.ParseExpression(token.Precedence.CALL)
+	_identifier := p.ParseExpression(token.Precedence.INDEX)
+	identifier := _identifier.(ast.NodeIdentifier)
+
+	if p.PeekToken().Type == token.DOT {
+		p.ExpectToken(token.DOT)        // consume `.`
+		p.ExpectToken(token.IDENTIFIER) // consume the identifier
+
+		identifier.Name += "."
+		identifier.Name += p.CurrentToken().Value
+	}
 
 	p.ExpectToken(token.LPAREN)
 	arguements := p.ParseNodeFunctionArguement()

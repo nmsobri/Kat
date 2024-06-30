@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	source := util.ReadFile("./doc/classic_for.kat")
+	source := util.ReadFile("./doc/function.kat")
 
 	l := lexer.New(source)
 	p := parser.New(l)

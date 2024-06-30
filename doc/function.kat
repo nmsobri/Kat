@@ -1,0 +1,14 @@
+struct Person {
+    name,
+    age
+}
+
+fn Person.print(self) {
+    self.name
+}
+
+fn main() {
+    let i = 10
+}
+
+
