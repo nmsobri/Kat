@@ -27,7 +27,7 @@ func (np NodeProgram) String() string {
 }
 
 // #######################################################
-// ################## Node Modern For Stmt ###############
+// ################## Node Modern For Stmt ###############😀
 // #######################################################
 type NodeModernForStmt struct {
 	Statement
@@ -37,7 +37,7 @@ type NodeModernForStmt struct {
 }
 
 // #######################################################
-// ################# Node Classic For Stmt ###############
+// ################# Node Classic For Stmt ###############😀
 // #######################################################
 type NodeClassicForStmt struct {
 	Statement

@@ -1,7 +1,9 @@
 package environment
 
 import (
+	"fmt"
 	"kat/value"
+	"log"
 )
 
 type Environment struct {
@@ -23,18 +25,38 @@ func NewWithParent(parent *Environment) *Environment {
 	}
 }
 
+func (env *Environment) Get(key string) (value.Value, bool) {
+	val, ok := env.Envs[key]
+
+	if !ok && env.Parent != nil {
+		return env.Parent.Get(key)
+	}
+
+	return val, ok
+}
+
 func (env *Environment) Set(key string, value value.Value) {
 	env.Envs[key] = value
 }
 
-func (env *Environment) Get(key string) (value.Value, bool) {
-	val, ok := env.Envs[key]
+func (env *Environment) Assign(key string, value value.Value) {
+	ok := env.setWithParent(key, value)
 
 	if !ok {
-		if env.Parent != nil {
-			return env.Parent.Get(key)
-		}
+		msg := fmt.Sprintf("Variable %s is not found", key)
+		log.Fatal(msg)
+	}
+}
+
+func (env *Environment) setWithParent(key string, value value.Value) bool {
+	if _, ok := env.Envs[key]; ok {
+		env.Envs[key] = value
+		return true
 	}
 
-	return val, ok
+	if env.Parent != nil {
+		return env.Parent.setWithParent(key, value)
+	}
+
+	return false
 }

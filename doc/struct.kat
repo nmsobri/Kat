@@ -6,4 +6,4 @@ struct User {
 
 let u = User{name:"Sobri", age:99, job:"Programmer"}
 
-u
+u.name

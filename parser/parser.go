@@ -186,7 +186,7 @@ func (p *Parser) ParseNodeDigit() ast.Expr {
 	val, e := strconv.ParseInt(p.CurrentToken().Value, 10, 64)
 
 	if e != nil {
-		log.Fatalf("Parser::Error:%s\n", e)
+		log.Fatalf("Parser::Errors:%s\n", e)
 	}
 
 	return ast.NodeInteger{
@@ -199,7 +199,7 @@ func (p *Parser) ParseNodeDouble() ast.Expr {
 	val, e := strconv.ParseFloat(p.CurrentToken().Value, 64)
 
 	if e != nil {
-		log.Fatalf("Parser::Error:%s\n", e)
+		log.Fatalf("Parser::Errors:%s\n", e)
 	}
 
 	return ast.NodeFloat{

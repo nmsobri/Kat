@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	source := util.ReadFile("./doc/modern_for.kat")
+	source := util.ReadFile("./doc/classic_for.kat")
 
 	l := lexer.New(source)
 	p := parser.New(l)
@@ -20,6 +20,14 @@ func main() {
 	e := evaluator.New(program)
 	env := environment.New()
 	res := e.Eval(program, env)
+
+	fmt.Println()
+	if e.IsError() {
+		fmt.Println("Evaluation Errors:")
+		for _, err := range e.Errors {
+			fmt.Println(err)
+		}
+	}
 
 	fmt.Println()
 	fmt.Println("Result:", res)
