@@ -13,6 +13,7 @@ type Value interface {
 var (
 	TRUE  = &ValueBool{true}
 	FALSE = &ValueBool{false}
+	NULL  = &ValueNull{}
 )
 
 type ValueFloat struct {
@@ -47,10 +48,10 @@ func (vs *ValueString) String() string {
 	return vs.Value
 }
 
-type ValueNil struct{}
+type ValueNull struct{}
 
-func (vn *ValueNil) String() string {
-	return "nil"
+func (vn *ValueNull) String() string {
+	return "null"
 }
 
 type ValueFunction struct {
@@ -95,9 +96,18 @@ func (vn *ValueReturn) String() string {
 }
 
 type ValueEnv struct {
-	Value any
+	Value Value
 }
 
 func (vn *ValueEnv) String() string {
 	return fmt.Sprintf("%v", vn.Value)
+}
+
+type WrapperFunction struct {
+	Name string
+	Fn   func(varargs ...Value) Value
+}
+
+func (wf WrapperFunction) String() string {
+	return "wrapperfunction"
 }

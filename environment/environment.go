@@ -60,3 +60,7 @@ func (env *Environment) setWithParent(key string, value value.Value) bool {
 
 	return false
 }
+
+func (env *Environment) String() string {
+	return fmt.Sprintf("%v", env.Envs)
+}

@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"kat/ast"
 	"kat/environment"
-	"kat/lexer"
-	"kat/parser"
+	"kat/stdlib"
 	"kat/util"
 	"kat/value"
-	"os"
 )
 
 type Evaluator struct {
@@ -24,7 +22,7 @@ func New(tree ast.Stmt) *Evaluator {
 }
 
 func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Value {
-	var result value.Value = &value.ValueNil{}
+	var result value.Value = value.NULL
 
 	if e.IsError() {
 		return result
@@ -276,7 +274,7 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 			var env *environment.Environment
 
 			switch left.(type) {
-			case *value.ValueNil:
+			case *value.ValueNull:
 				return result
 
 			case *value.ValueEnv:
@@ -355,20 +353,23 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 			params[i] = e.Eval(param, env)
 		}
 
-		fn, ok := val.(*value.ValueFunction)
+		//fn, ok := val.(*value.ValueFunction)
+		fn, ok := val.(*value.WrapperFunction)
 
 		if !ok {
 			return result
 		}
 
-		newEnv := environment.NewWithParent(env)
+		return fn.Fn(params...)
 
-		for i, arg := range fn.Args {
-			newEnv.Set(arg.String(), params[i])
-		}
-
-		result := e.Eval(fn.Body, newEnv)
-		return result
+		//newEnv := environment.NewWithParent(env)
+		//
+		//for i, arg := range fn.Args {
+		//	newEnv.Set(arg.String(), params[i])
+		//}
+		//
+		//result := e.Eval(fn.Body, newEnv)
+		//return result
 
 	case *ast.NodeBlockStmt:
 		for _, stmt := range stmt.Body {
@@ -576,26 +577,12 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 		}
 
 	case *ast.NodeImportExpr:
-		path := stmt.Path.(*ast.NodeString).Value
-		fileName := fmt.Sprintf("%s.kat", path)
-		realPath := fmt.Sprintf("%s/%s/%s", os.Getenv("PWD"), "stdlib", fileName)
-
-		source := util.ReadFile(realPath)
-		l := lexer.New(source)
-		p := parser.New(l)
-
-		program := p.ParseProgram()
-
-		e := New(program)
+		//module := stmt.Path.(*ast.NodeString).Value
 		env := environment.New()
-		e.Eval(program, env)
-
-		if e.IsError() {
-			fmt.Println("Evaluation Errors:")
-			for _, err := range e.Errors {
-				fmt.Println(err)
-			}
-		}
+		env.Set("Print", &value.WrapperFunction{Name: "Print", Fn: stdlib.Print})
+		env.Set("Println", &value.WrapperFunction{Name: "Print", Fn: stdlib.Println})
+		env.Set("Printf", &value.WrapperFunction{Name: "Print", Fn: stdlib.Printf})
+		env.Set("Sprintf", &value.WrapperFunction{Name: "Print", Fn: stdlib.Sprintf})
 
 		return &value.ValueEnv{env}
 

@@ -1,3 +1,4 @@
-const f = import("fmt")
-
-f.return10()
+const fmt = import("fmt")
+let name = fmt.Sprintf("hello %s", "sobri kamal")
+fmt.Print(name)
+fmt.Println()
