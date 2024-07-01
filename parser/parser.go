@@ -136,8 +136,8 @@ func (*Parser) GetOperatorPrecedence(tok token.Token) int {
 	return token.GetPrecedence(tok)
 }
 
-func (p *Parser) ParseProgram() ast.NodeProgram {
-	program := ast.NodeProgram{}
+func (p *Parser) ParseProgram() *ast.NodeProgram {
+	program := &ast.NodeProgram{}
 
 	for p.CurrentToken().Type != token.EOF {
 		program.Body = append(program.Body, p.ParseStatement())
@@ -190,7 +190,7 @@ func (p *Parser) ParseNodeDigit() ast.Expr {
 		log.Fatalf("Parser::Errors:%s\n", e)
 	}
 
-	return ast.NodeInteger{
+	return &ast.NodeInteger{
 		Token: p.CurrentToken(),
 		Value: val,
 	}
@@ -203,14 +203,14 @@ func (p *Parser) ParseNodeDouble() ast.Expr {
 		log.Fatalf("Parser::Errors:%s\n", e)
 	}
 
-	return ast.NodeFloat{
+	return &ast.NodeFloat{
 		Token: p.CurrentToken(),
 		Value: val,
 	}
 }
 
-func (p *Parser) ParseNodeNil() ast.NodeInteger {
-	return ast.NodeInteger{
+func (p *Parser) ParseNodeNil() ast.Expr {
+	return &ast.NodeInteger{
 		Token: p.CurrentToken(),
 		Value: 999,
 	}
@@ -221,7 +221,7 @@ func (p *Parser) ParseBinaryExpr(left ast.Expr) ast.Expr {
 
 	right := p.ParseExpression(p.GetOperatorPrecedence(currentToken))
 
-	return ast.NodeBinaryExpr{
+	return &ast.NodeBinaryExpr{
 		Token:    currentToken,
 		Left:     left,
 		Right:    right,
@@ -238,7 +238,7 @@ func (p *Parser) ParsePrefixExpr() ast.Expr {
 		currentToken.Type = token.NEGATE
 	}
 
-	return ast.NodePrefixExpr{
+	return &ast.NodePrefixExpr{
 		Token:    currentToken,
 		Operator: currentToken.Value,
 		Right:    right,
@@ -252,7 +252,7 @@ func (p *Parser) ParseNodeBoolean() ast.Expr {
 		val = false
 	}
 
-	return ast.NodeBoolean{
+	return &ast.NodeBoolean{
 		Token: p.CurrentToken(),
 		Value: val,
 	}
@@ -262,7 +262,7 @@ func (p *Parser) ParseIdentifier() ast.Expr {
 	currentToken := p.CurrentToken()
 	identifier := currentToken.Value
 
-	return ast.NodeIdentifier{
+	return &ast.NodeIdentifier{
 		Token: currentToken,
 		Name:  identifier,
 	}
@@ -276,7 +276,7 @@ func (p *Parser) ParseConditionExpr(left ast.Expr) ast.Expr {
 
 	elseArm := p.ParseExpression(p.GetOperatorPrecedence(currentToken) - 1)
 
-	return ast.NodeTernaryExpr{
+	return &ast.NodeTernaryExpr{
 		Token:     currentToken,
 		Condition: left,
 		ThenArm:   thenArm,
@@ -292,7 +292,7 @@ func (p *Parser) ParseConstDecl() ast.Stmt {
 
 	value := p.ParseExpression(token.Precedence.LOWEST)
 
-	return ast.NodeConstStmt{
+	return &ast.NodeConstStmt{
 		Token:      currentToken,
 		Identifier: identifier,
 		Value:      value,
@@ -307,14 +307,14 @@ func (p *Parser) ParseImportDecl() ast.Expr {
 
 	p.ExpectToken(token.RPAREN) // consume `)`
 
-	return ast.NodeImportExpr{
+	return &ast.NodeImportExpr{
 		Token: currentToken,
 		Path:  path,
 	}
 }
 
 func (p *Parser) ParseNodeString() ast.Expr {
-	return ast.NodeString{
+	return &ast.NodeString{
 		Token: p.CurrentToken(),
 		Value: p.CurrentToken().Value,
 	}
@@ -349,7 +349,7 @@ func (p *Parser) ParseNodeStruct() ast.Stmt {
 
 	p.ExpectToken(token.RBRACE) // consume `}`
 
-	return ast.NodeStructStmt{
+	return &ast.NodeStructStmt{
 		Token:      currentToken,
 		Identifier: identifier,
 		Properties: structProperties,
@@ -359,7 +359,7 @@ func (p *Parser) ParseNodeStruct() ast.Stmt {
 func (p *Parser) ParseNodeFunction() ast.Stmt {
 	currentToken := p.CurrentToken()
 	_identifier := p.ParseExpression(token.Precedence.EXPR)
-	identifier := _identifier.(ast.NodeIdentifier)
+	identifier := _identifier.(*ast.NodeIdentifier)
 
 	if p.PeekToken().Type == token.DOT {
 		p.ExpectToken(token.DOT)        // consume `.`
@@ -375,7 +375,7 @@ func (p *Parser) ParseNodeFunction() ast.Stmt {
 
 	body := p.parseBlockStmt()
 
-	return ast.NodeFunctionStmt{
+	return &ast.NodeFunctionStmt{
 		Token:      currentToken,
 		Identifier: identifier,
 		Arguements: arguements,
@@ -403,7 +403,7 @@ func (p *Parser) ParseFunctionCall(left ast.Expr) ast.Expr {
 	functionArgs := p.ParseNodeFunctionArguement()
 	p.ExpectToken(token.RPAREN)
 
-	return ast.NodeFunctionCall{
+	return &ast.NodeFunctionCall{
 		Token:      currentToken,
 		Identifer:  left,
 		Parameters: functionArgs,
@@ -416,7 +416,7 @@ func (p *Parser) ParseLetDecl() ast.Stmt {
 	p.ExpectToken(token.EQUAL)
 	value := p.ParseExpression(token.Precedence.LOWEST)
 
-	return ast.NodeLetStmt{
+	return &ast.NodeLetStmt{
 		Token:      currentToken,
 		Identifier: ident,
 		Value:      value,
@@ -438,7 +438,7 @@ func (p *Parser) ParseArrayDecl() ast.Expr {
 
 	p.ExpectToken(token.RBRACKET)
 
-	return ast.NodeArrayExpr{
+	return &ast.NodeArrayExpr{
 		Token: currentToken,
 		Value: values,
 	}
@@ -449,7 +449,7 @@ func (p *Parser) ParseIndexExpr(left ast.Expr) ast.Expr {
 	index := p.ParseExpression(token.Precedence.LOWEST)
 	p.ExpectToken(token.RBRACKET)
 
-	return ast.NodeIndexExpr{
+	return &ast.NodeIndexExpr{
 		Token:      currentToken,
 		Identifier: left,
 		Index:      index,
@@ -473,7 +473,7 @@ func (p *Parser) ParseMapExpr() ast.Expr {
 
 	p.ExpectToken(token.RBRACE)
 
-	return ast.NodeMapExpr{
+	return &ast.NodeMapExpr{
 		Token: currentToken,
 		Map:   values,
 	}
@@ -483,7 +483,7 @@ func (p *Parser) ParseStructExpr(left ast.Expr) ast.Expr {
 	currentToken := p.CurrentToken()
 	values := p.ParseMapExpr()
 
-	return ast.NodeStructExpr{
+	return &ast.NodeStructExpr{
 		Token:  currentToken,
 		Name:   left,
 		Values: values,
@@ -497,7 +497,7 @@ func (p *Parser) ParseIfStmt() ast.Stmt {
 
 	p.skipEOL()
 
-	nodeIf := ast.NodeConditionalStmt{
+	nodeIf := &ast.NodeConditionalStmt{
 		Token:     currentToken,
 		Condition: condition,
 		ThenArm:   p.parseBlockStmt(),
@@ -513,8 +513,6 @@ func (p *Parser) ParseIfStmt() ast.Stmt {
 		p.ExpectToken(token.ELSE)
 		p.ExpectToken(token.IF)
 
-		//_nodeIf, _ := nodeIf._Expression.(ast.NodeTernaryExpr)
-		//_nodeIf.ElseArm = p.ParseIfStmt()
 		nodeIf.ElseArm = p.ParseIfStmt()
 
 		return nodeIf
@@ -529,11 +527,11 @@ func (p *Parser) skipEOL() {
 	}
 }
 
-func (p *Parser) parseBlockStmt() ast.NodeBlockStmt {
+func (p *Parser) parseBlockStmt() ast.Stmt {
 	p.ExpectToken(token.LBRACE)
 	p.skipEOL()
 
-	body := ast.NodeBlockStmt{}
+	body := &ast.NodeBlockStmt{}
 
 	for p.PeekToken().Type != token.RBRACE {
 		body.Body = append(body.Body, p.ParseStatement())
@@ -554,7 +552,7 @@ func (p *Parser) parseForStmt() ast.Stmt {
 }
 
 func (p *Parser) parsePostfixExpr(left ast.Expr) ast.Expr {
-	return ast.NodePostfixExpr{
+	return &ast.NodePostfixExpr{
 		Token:    p.CurrentToken(),
 		Left:     left,
 		Operator: p.CurrentToken().Value,
@@ -571,7 +569,7 @@ func (p *Parser) ParseStatement() ast.Stmt {
 }
 
 func (p *Parser) ParseExpressionStatement() ast.Stmt {
-	return ast.NodeExprStmt{Expr: p.ParseExpression(token.Precedence.LOWEST)}
+	return &ast.NodeExprStmt{Expr: p.ParseExpression(token.Precedence.LOWEST)}
 }
 
 func (p *Parser) parseModernForStmt() ast.Stmt {
@@ -579,7 +577,7 @@ func (p *Parser) parseModernForStmt() ast.Stmt {
 	condition := p.ParseExpression(token.Precedence.LOWEST + 1)
 	body := p.parseBlockStmt()
 
-	return ast.NodeModernForStmt{
+	return &ast.NodeModernForStmt{
 		Token:     currentToken,
 		Condition: condition,
 		Body:      body,
@@ -598,7 +596,7 @@ func (p *Parser) parseClassicForStmt() ast.Stmt {
 
 	body := p.parseBlockStmt()
 
-	return ast.NodeClassicForStmt{
+	return &ast.NodeClassicForStmt{
 		Token:     currentToken,
 		Condition: condition,
 		PreExpr:   preExpr,
@@ -611,7 +609,7 @@ func (p *Parser) parseReturnStmt() ast.Stmt {
 	currentToken := p.CurrentToken()
 	expr := p.ParseExpression(token.Precedence.LOWEST)
 
-	return ast.NodeReturnStmt{
+	return &ast.NodeReturnStmt{
 		Token: currentToken,
 		Value: expr,
 	}

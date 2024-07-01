@@ -11,15 +11,15 @@ type Value interface {
 }
 
 var (
-	TRUE  = ValueBool{true}
-	FALSE = ValueBool{false}
+	TRUE  = &ValueBool{true}
+	FALSE = &ValueBool{false}
 )
 
 type ValueFloat struct {
 	Value float64
 }
 
-func (vf ValueFloat) String() string {
+func (vf *ValueFloat) String() string {
 	return fmt.Sprintf("%.2f", vf.Value)
 }
 
@@ -27,7 +27,7 @@ type ValueInt struct {
 	Value int64
 }
 
-func (vi ValueInt) String() string {
+func (vi *ValueInt) String() string {
 	return fmt.Sprintf("%d", vi.Value)
 }
 
@@ -35,7 +35,7 @@ type ValueBool struct {
 	Value bool
 }
 
-func (vb ValueBool) String() string {
+func (vb *ValueBool) String() string {
 	return fmt.Sprintf("%t", vb.Value)
 }
 
@@ -43,32 +43,32 @@ type ValueString struct {
 	Value string
 }
 
-func (vs ValueString) String() string {
+func (vs *ValueString) String() string {
 	return vs.Value
 }
 
 type ValueNil struct{}
 
-func (vn ValueNil) String() string {
+func (vn *ValueNil) String() string {
 	return "nil"
 }
 
 type ValueFunction struct {
 	Args []Value
-	Body ast.NodeBlockStmt
+	Body ast.Stmt
 }
 
-func (vn ValueFunction) String() string {
+func (vn *ValueFunction) String() string {
 	return "fn"
 }
 
 type ValueStruct[T any] struct {
 	Name string
 	Prop []string
-	ValueKeyVal[T]
+	*ValueKeyVal[T]
 }
 
-func (vs ValueStruct[T]) String() string {
+func (vs *ValueStruct[T]) String() string {
 	valStruct := make([]string, 0)
 
 	for _, k := range vs.Prop {
@@ -82,7 +82,7 @@ type ValueKeyVal[T any] struct {
 	Map map[string]T
 }
 
-func (vs ValueKeyVal[T]) String() string {
+func (vs *ValueKeyVal[T]) String() string {
 	return "valuekeyval"
 }
 
@@ -90,7 +90,7 @@ type ValueReturn struct {
 	Value Value
 }
 
-func (vn ValueReturn) String() string {
+func (vn *ValueReturn) String() string {
 	return fmt.Sprintf("%v", vn.Value)
 }
 
@@ -98,6 +98,6 @@ type ValueEnv struct {
 	Value any
 }
 
-func (vn ValueEnv) String() string {
+func (vn *ValueEnv) String() string {
 	return fmt.Sprintf("%v", vn.Value)
 }

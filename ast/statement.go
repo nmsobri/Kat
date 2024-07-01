@@ -21,7 +21,7 @@ type NodeProgram struct {
 	Body []Stmt // Statement
 }
 
-func (np NodeProgram) String() string {
+func (np *NodeProgram) String() string {
 	litter.Config.FieldExclusions = regexp.MustCompile(`^(Token|Statement|Expression)$`)
 	return litter.Sdump(np)
 }
@@ -33,7 +33,7 @@ type NodeModernForStmt struct {
 	Statement
 	Token     token.Token
 	Condition Expr
-	Body      NodeBlockStmt
+	Body      Stmt
 }
 
 // #######################################################
@@ -45,7 +45,7 @@ type NodeClassicForStmt struct {
 	Condition Expr
 	PreExpr   Stmt
 	PostExpr  Expr
-	Body      NodeBlockStmt
+	Body      Stmt
 }
 
 // #######################################################
@@ -76,7 +76,7 @@ type NodeFunctionStmt struct {
 	Token      token.Token
 	Identifier Expr
 	Arguements []Expr
-	Body       NodeBlockStmt
+	Body       Stmt
 }
 
 // #######################################################

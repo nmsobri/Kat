@@ -14,14 +14,14 @@ func TypeOf(v any) string {
 
 func IsTruthy(v value.Value) bool {
 	switch v.(type) {
-	case value.ValueInt:
-		return v.(value.ValueInt).Value != 0
+	case *value.ValueInt:
+		return v.(*value.ValueInt).Value != 0
 
-	case value.ValueFloat:
-		return v.(value.ValueFloat).Value != 0
+	case *value.ValueFloat:
+		return v.(*value.ValueFloat).Value != 0
 
-	case value.ValueBool:
-		return v.(value.ValueBool).Value
+	case *value.ValueBool:
+		return v.(*value.ValueBool).Value
 	}
 
 	return false
