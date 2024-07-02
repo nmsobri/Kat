@@ -1,0 +1,4 @@
+const fmt = import("fmt")
+
+let user = ["sobri", "joe", "jambul", 99]
+fmt.Println(user[1])

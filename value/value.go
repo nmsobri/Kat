@@ -103,6 +103,14 @@ func (vn *ValueEnv) String() string {
 	return fmt.Sprintf("%v", vn.Value)
 }
 
+type ValueArray struct {
+	Value []Value
+}
+
+func (vn *ValueArray) String() string {
+	return fmt.Sprintf("%v", vn.Value)
+}
+
 type WrapperFunction struct {
 	Name string
 	Fn   func(varargs ...Value) Value
