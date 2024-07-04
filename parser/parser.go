@@ -359,14 +359,18 @@ func (p *Parser) ParseNodeStruct() ast.Stmt {
 func (p *Parser) ParseNodeFunction() ast.Stmt {
 	currentToken := p.CurrentToken()
 	_identifier := p.ParseExpression(token.Precedence.EXPR)
-	identifier := _identifier.(*ast.NodeIdentifier)
+	var identifier ast.Expr = _identifier.(*ast.NodeIdentifier)
 
 	if p.PeekToken().Type == token.DOT {
 		p.ExpectToken(token.DOT)        // consume `.`
 		p.ExpectToken(token.IDENTIFIER) // consume the identifier
 
-		identifier.Name += "."
-		identifier.Name += p.CurrentToken().Value
+		identifier = &ast.NodeBinaryExpr{
+			Token:    currentToken,
+			Left:     identifier,
+			Right:    &ast.NodeIdentifier{Token: p.CurrentToken(), Name: p.CurrentToken().Value},
+			Operator: ".",
+		}
 	}
 
 	p.ExpectToken(token.LPAREN)

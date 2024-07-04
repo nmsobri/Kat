@@ -11,4 +11,6 @@ fn User.info() {
 }
 
 let u = User{name:"Sobri", age:99, job:"Programmer"}
-fmt.Println(u.job)
+
+
+User.info()

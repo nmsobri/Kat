@@ -355,7 +355,22 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 		return val
 
 	case *ast.NodeFunctionStmt:
-		ident := stmt.Identifier.(*ast.NodeIdentifier).Name
+		var ident string
+		var receiver string
+
+		switch stmt.Identifier.(type) {
+		case *ast.NodeIdentifier:
+			ident = stmt.Identifier.(*ast.NodeIdentifier).Name
+
+		case *ast.NodeBinaryExpr:
+			receiver = stmt.Identifier.(*ast.NodeBinaryExpr).Left.(*ast.NodeIdentifier).Name
+			ident = stmt.Identifier.(*ast.NodeBinaryExpr).Right.(*ast.NodeIdentifier).Name
+
+		default:
+			msg := fmt.Sprintf("Unrecognized function identifier type: %s", util.TypeOf(stmt.Identifier))
+			e.Error(msg)
+			return result
+		}
 
 		args := make([]value.Value, len(stmt.Arguements))
 		for i, arg := range stmt.Arguements {
@@ -364,13 +379,35 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 
 		val := &value.ValueFunction{Args: args, Body: stmt.Body}
 
-		if _, ok := env.Get(ident); ok {
-			msg := fmt.Sprintf("Symbol %s already exists", ident)
-			e.Error(msg)
-			return result
-		}
+		if receiver != "" {
+			receiverVal, ok := env.Get(receiver)
 
-		env.Set(ident, val)
+			if !ok {
+				msg := fmt.Sprintf("Symbol %s is not exists", ident)
+				e.Error(msg)
+				return result
+			}
+
+			_struct, ok := receiverVal.(*value.ValueStruct[value.Value])
+
+			if !ok {
+				msg := fmt.Sprintf("Symbol %s is not a struct", ident)
+				e.Error(msg)
+				return result
+			}
+
+			_struct.Prop = append(_struct.Prop, ident)
+
+			env.Set(ident, val)
+		} else {
+			if _, ok := env.Get(ident); ok {
+				msg := fmt.Sprintf("Symbol %s already exists", ident)
+				e.Error(msg)
+				return result
+			}
+
+			env.Set(ident, val)
+		}
 
 	case *ast.NodeFunctionCall:
 		val := e.Eval(stmt.Identifer, env)
@@ -452,7 +489,8 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 			props = append(props, prop.Name)
 		}
 
-		env.Set(identifier.Name, &value.ValueStruct[byte]{identifier.Name, props, &value.ValueKeyVal[byte]{Map: valKeyVal}})
+		_struct := &value.ValueStruct[byte]{identifier.Name, props, &value.ValueKeyVal[byte]{Map: valKeyVal}}
+		env.Set(identifier.Name, _struct)
 
 	case *ast.NodeStructExpr:
 		ident, ok := stmt.Name.(*ast.NodeIdentifier)
