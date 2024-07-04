@@ -276,16 +276,31 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 			return value.FALSE
 
 		case ".":
-			left := e.Eval(stmt.Left, env)
+			receiver := e.Eval(stmt.Left, env)
 			right := stmt.Right.(*ast.NodeIdentifier).Name
 			var env *environment.Environment
 
-			switch left.(type) {
+			switch receiver.(type) {
 			case *value.ValueNull:
 				return result
 
-			case *value.ValueEnv:
-				env = left.(*value.ValueEnv).Value.(*environment.Environment)
+			case *value.ValueModule:
+				env = receiver.(*value.ValueModule).Value.(*environment.Environment)
+
+			case *value.ValueStruct[value.Value]:
+				val, ok := receiver.(*value.ValueStruct[value.Value]).Map[right]
+
+				if !ok {
+					msg := fmt.Sprintf("Symbol %s is not found", right)
+					e.Error(msg)
+					return result
+				}
+
+				return val
+
+			default:
+				e.Error(fmt.Sprintf("Unknown receiver %s type for dot operator", util.TypeOf(receiver)))
+				return result
 			}
 
 			val, ok := env.Get(right)
@@ -613,7 +628,7 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 		env.Set("Printf", &value.WrapperFunction{Name: "Print", Fn: stdlib.Printf})
 		env.Set("Sprintf", &value.WrapperFunction{Name: "Print", Fn: stdlib.Sprintf})
 
-		return &value.ValueEnv{env}
+		return &value.ValueModule{env}
 
 	case *ast.NodeArrayExpr:
 		values := make([]value.Value, 0)

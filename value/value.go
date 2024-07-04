@@ -95,12 +95,12 @@ func (vn *ValueReturn) String() string {
 	return fmt.Sprintf("%v", vn.Value)
 }
 
-type ValueEnv struct {
+type ValueModule struct {
 	Value Value
 }
 
-func (vn *ValueEnv) String() string {
-	return fmt.Sprintf("%v", vn.Value)
+func (vm *ValueModule) String() string {
+	return fmt.Sprintf("%v", vm.Value)
 }
 
 type ValueArray struct {

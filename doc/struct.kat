@@ -1,9 +1,14 @@
+const fmt = import("fmt")
+
 struct User {
     name,
     age,
     job,
 }
 
-let u = User{name:"Sobri", age:99, job:"Programmer"}
+fn User.info() {
+    fmt.Println("User.Info")
+}
 
-u.name
+let u = User{name:"Sobri", age:99, job:"Programmer"}
+fmt.Println(u.job)

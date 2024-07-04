@@ -10,13 +10,13 @@ import (
 )
 
 func main() {
-	source := util.ReadFile("./doc/array.kat")
+	source := util.ReadFile("./doc/struct.kat")
 
 	l := lexer.New(source)
 	p := parser.New(l)
 
 	program := p.ParseProgram()
-	//fmt.Println(program.String())
+	fmt.Println(program.String())
 
 	e := evaluator.New(program)
 	env := environment.New()
