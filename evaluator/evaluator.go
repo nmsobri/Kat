@@ -377,7 +377,7 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 			args[i] = &value.ValueString{arg.(*ast.NodeIdentifier).Name}
 		}
 
-		val := &value.ValueFunction{Args: args, Body: stmt.Body}
+		valFn := &value.ValueFunction{Args: args, Body: stmt.Body}
 
 		if receiver != "" {
 			receiverVal, ok := env.Get(receiver)
@@ -396,9 +396,18 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 				return result
 			}
 
-			_struct.Prop = append(_struct.Prop, ident)
+			if util.InArray[string](_struct.Prop, ident) {
+				msg := fmt.Sprintf("Symbol %s already exists", ident)
+				e.Error(msg)
+				return result
+			}
 
-			env.Set(ident, val)
+			_struct.Prop = append(_struct.Prop, ident)
+			_struct.ValueKeyVal.Map[ident] = valFn
+
+			// No need to set the value to the environment since
+			// the struct is a pointer
+			env.Set(_struct.Name, _struct)
 		} else {
 			if _, ok := env.Get(ident); ok {
 				msg := fmt.Sprintf("Symbol %s already exists", ident)
@@ -406,25 +415,84 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 				return result
 			}
 
-			env.Set(ident, val)
+			env.Assign(ident, valFn)
 		}
 
 	case *ast.NodeFunctionCall:
-		val := e.Eval(stmt.Identifer, env)
-		params := make([]value.Value, len(stmt.Parameters))
+		var receiver value.Value
+		var identifier value.Value
 
-		for i, param := range stmt.Parameters {
-			params[i] = e.Eval(param, env)
+		switch node := stmt.Identifer.(type) {
+		case *ast.NodeIdentifier:
+			identifier = e.Eval(node, env)
+
+		case *ast.NodeBinaryExpr:
+			receiver = e.Eval(node.Left, env)
+
+			ident, ok := node.Right.(*ast.NodeIdentifier)
+
+			if !ok {
+				msg := fmt.Sprintf("Invalid identifier: %s", node.Right)
+				e.Error(msg)
+				return result
+			}
+
+			identifier = &value.ValueString{ident.Name}
 		}
 
-		//fn, ok := val.(*value.ValueFunction)
-		fn, ok := val.(*value.WrapperFunction)
+		if receiver != nil {
+			switch receiver.(type) {
 
-		if !ok {
-			return result
+			case *value.ValueStruct[value.Value]:
+				valFn, ok := receiver.(*value.ValueStruct[value.Value]).Map[identifier.(*value.ValueString).Value]
+
+				if !ok {
+					msg := fmt.Sprintf("Symbol %s is not found", identifier.(*value.ValueString).Value)
+					e.Error(msg)
+					return result
+				}
+
+				blah, ok := valFn.(*value.ValueFunction)
+
+				if !ok {
+					msg := fmt.Sprintf("Symbol %s is not a function", identifier.(*value.ValueString).Value)
+					e.Error(msg)
+					return result
+				}
+
+				return e.Eval(blah.Body, env)
+
+			case *value.ValueModule:
+				valFn, ok := receiver.(*value.ValueModule).Value.(*environment.Environment).Get(identifier.(*value.ValueString).Value)
+
+				if !ok {
+					msg := fmt.Sprintf("Symbol %s is not found", identifier.(*value.ValueString).Value)
+					e.Error(msg)
+					return result
+				}
+
+				params := make([]value.Value, len(stmt.Parameters))
+
+				for i, param := range stmt.Parameters {
+					params[i] = e.Eval(param, env)
+				}
+
+				//fn, ok := valFn.(*value.ValueFunction)
+				fn, ok := valFn.(*value.WrapperFunction)
+
+				if !ok {
+					return result
+				}
+
+				return fn.Fn(params...)
+
+			default:
+				panic("Unrecognized receiver type")
+			}
+
 		}
 
-		return fn.Fn(params...)
+		//identifier := e.Eval(stmt.Identifer, env)
 
 		//newEnv := environment.NewWithParent(env)
 		//
@@ -474,7 +542,7 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 		}
 
 		props := make([]string, 0)
-		valKeyVal := make(map[string]byte)
+		valKeyVal := make(map[string]value.Value)
 
 		for _, p := range stmt.Properties {
 			prop, ok := p.(*ast.NodeIdentifier)
@@ -485,11 +553,11 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 				return result
 			}
 
-			valKeyVal[prop.Name] = 1
+			valKeyVal[prop.Name] = value.NULL
 			props = append(props, prop.Name)
 		}
 
-		_struct := &value.ValueStruct[byte]{identifier.Name, props, &value.ValueKeyVal[byte]{Map: valKeyVal}}
+		_struct := &value.ValueStruct[value.Value]{identifier.Name, props, &value.ValueKeyVal[value.Value]{Map: valKeyVal}}
 		env.Set(identifier.Name, _struct)
 
 	case *ast.NodeStructExpr:
@@ -502,7 +570,7 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 		}
 
 		structStmt, ok := env.Get(ident.Name)
-		structStmtProp := structStmt.(*value.ValueStruct[byte]).Prop
+		structStmtProp := structStmt.(*value.ValueStruct[value.Value]).Prop
 
 		if !ok {
 			msg := fmt.Sprintf("Struct %s is not found", ident.Name)

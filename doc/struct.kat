@@ -7,10 +7,10 @@ struct User {
 }
 
 fn User.info() {
-    fmt.Println("User.Info")
+    fmt.Println("Hello world")
+    let salary = 1000 + 1
+    fmt.Println(salary)
 }
 
 let u = User{name:"Sobri", age:99, job:"Programmer"}
-
-
-User.info()
+User.info() // notice it is User and not u
