@@ -48,6 +48,14 @@ func (vs *ValueString) String() string {
 	return vs.Value
 }
 
+type ValueSelf struct {
+	Value string
+}
+
+func (vs *ValueSelf) String() string {
+	return vs.Value
+}
+
 type ValueNull struct{}
 
 func (vn *ValueNull) String() string {

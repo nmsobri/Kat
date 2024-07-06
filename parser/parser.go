@@ -53,7 +53,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.StatementFunctions[token.RETURN] = p.parseReturnStmt
 
 	// Register Prefix functions
-	p.PrefixFunctions[token.SELF] = p.ParseIdentifier
+	p.PrefixFunctions[token.SELF] = p.ParseSelf
 	p.PrefixFunctions[token.INTEGER] = p.ParseNodeDigit
 	p.PrefixFunctions[token.DOUBLE] = p.ParseNodeDouble
 	p.PrefixFunctions[token.TRUE] = p.ParseNodeBoolean
@@ -264,6 +264,16 @@ func (p *Parser) ParseIdentifier() ast.Expr {
 
 	return &ast.NodeIdentifier{
 		Token: currentToken,
+		Name:  identifier,
+	}
+}
+
+func (p *Parser) ParseSelf() ast.Expr {
+	currentToken := p.CurrentToken()
+	identifier := currentToken.Value
+
+	return &ast.NodeSelf{
+		Token: p.CurrentToken(),
 		Name:  identifier,
 	}
 }

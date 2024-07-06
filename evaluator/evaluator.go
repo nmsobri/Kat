@@ -298,8 +298,12 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 
 				return val
 
+			case *value.ValueSelf:
+				foo, _ := env.Get(receiver.(*value.ValueSelf).Value)
+				return foo
+
 			default:
-				e.Error(fmt.Sprintf("Unknown receiverInstance %s type for dot operator", util.TypeOf(receiver)))
+				e.Error(fmt.Sprintf("Unknown receiverInstance type %s for dot operator", util.TypeOf(receiver)))
 				return result
 			}
 
@@ -373,8 +377,26 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 		}
 
 		args := make([]value.Value, len(stmt.Arguements))
-		for i, arg := range stmt.Arguements {
-			args[i] = &value.ValueString{arg.(*ast.NodeIdentifier).Name}
+
+		for i, _arg := range stmt.Arguements {
+			switch arg := _arg.(type) {
+			case *ast.NodeIdentifier:
+				args[i] = &value.ValueString{arg.Name}
+
+			case *ast.NodeSelf:
+				if i != 0 {
+					msg := fmt.Sprintf("self arguement should be at position 0, detected position: %d", i)
+					e.Error(msg)
+					return result
+				}
+
+				args[i] = &value.ValueSelf{arg.Name}
+
+			default:
+				msg := fmt.Sprintf("Unrecognized arguement type: %s", util.TypeOf(arg))
+				e.Error(msg)
+				return result
+			}
 		}
 
 		valFn := &value.ValueFunction{Args: args, Body: stmt.Body}
@@ -402,10 +424,10 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 				return result
 			}
 
-			_struct.Prop = append(_struct.Prop, ident)
-			_struct.ValueKeyVal.Map[ident] = valFn
 			// No need to set the value to the environment since
 			// the struct is a pointer
+			_struct.Prop = append(_struct.Prop, ident)
+			_struct.ValueKeyVal.Map[ident] = valFn
 		} else {
 			if _, ok := env.Get(ident); ok {
 				msg := fmt.Sprintf("Symbol %s already exists", ident)
@@ -417,9 +439,10 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 		}
 
 	case *ast.NodeFunctionCall:
+		var identifierName string
 		var receiverInstance value.Value
 		var identifier value.Value
-		var identifierName string
+		var fnEnv = environment.NewWithParent(env)
 
 		switch node := stmt.Identifer.(type) {
 		case *ast.NodeIdentifier:
@@ -438,6 +461,13 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 			}
 
 			identifier = &value.ValueString{ident.Name}
+			identifierName = ident.Name
+		}
+
+		// Params
+		params := make([]value.Value, len(stmt.Parameters))
+		for i, param := range stmt.Parameters {
+			params[i] = e.Eval(param, env)
 		}
 
 		if receiverInstance != nil {
@@ -477,7 +507,39 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 					return result
 				}
 
-				return e.Eval(valFn.Body, env)
+				// Start bind params to args
+				fnArgs := valFn.Args
+
+				if len(valFn.Args) > 0 {
+					self, ok := valFn.Args[0].(*value.ValueSelf)
+
+					if ok {
+						fnArgs = fnArgs[1:] // strip self
+						fnEnv.Set(self.Value, receiverInstance)
+					}
+
+				}
+
+				if len(fnArgs) > len(params) {
+					msg := fmt.Sprintf("Bad function arguments, expected %d, got %d", len(fnArgs), len(params))
+					e.Error(msg)
+					return result
+				}
+
+				// Args
+				for i, _arg := range fnArgs {
+					switch arg := _arg.(type) {
+					case *value.ValueString:
+						fnEnv.Set(arg.Value, params[i])
+
+					default:
+						msg := fmt.Sprintf("Unrecognized arguement type: %s", util.TypeOf(arg))
+						e.Error(msg)
+						return result
+					}
+				}
+
+				return e.Eval(valFn.Body, fnEnv)
 
 			case *value.ValueModule:
 				valFn, ok := receiverInstance.(*value.ValueModule).Value.(*environment.Environment).Get(identifier.(*value.ValueString).Value)
@@ -486,12 +548,6 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 					msg := fmt.Sprintf("Symbol %s is not found", identifier.(*value.ValueString).Value)
 					e.Error(msg)
 					return result
-				}
-
-				params := make([]value.Value, len(stmt.Parameters))
-
-				for i, param := range stmt.Parameters {
-					params[i] = e.Eval(param, env)
 				}
 
 				fn, ok := valFn.(*value.WrapperFunction)
@@ -517,7 +573,25 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 			return result
 		}
 
-		result = e.Eval(valFn.Body, env)
+		if len(valFn.Args) > len(params) {
+			msg := fmt.Sprintf("Bad function arguments, expected %d, got %d", len(valFn.Args), len(params))
+			e.Error(msg)
+			return result
+		}
+
+		for i, _arg := range valFn.Args {
+			switch arg := _arg.(type) {
+			case *value.ValueString:
+				fnEnv.Set(arg.Value, params[i])
+
+			default:
+				msg := fmt.Sprintf("Unrecognized arguement type: %s", util.TypeOf(arg))
+				e.Error(msg)
+				return result
+			}
+		}
+
+		result = e.Eval(valFn.Body, fnEnv)
 		return result
 
 	case *ast.NodeBlockStmt:
@@ -789,6 +863,17 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 		}
 
 		return array.Value[index.Value]
+
+	case *ast.NodeSelf:
+		self, ok := env.Get(stmt.Name)
+
+		if !ok {
+			msg := fmt.Sprintf("Symbol %s is not found", stmt.Name)
+			e.Error(msg)
+			return result
+		}
+
+		return self
 
 	default:
 		msg := fmt.Sprintf("Unrecognized statement type: %T", stmt)

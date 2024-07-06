@@ -13,11 +13,12 @@ fn User.info(self) {
     fmt.Println(self.job)
 }
 
-fn hai() {
-    fmt.Println("hai from free function")
-}
-
 let u = User{name:"Sobri", age:99, job:"Programmer"}
 u.info()
 
-hai()
+
+fn hello(what) {
+    fmt.Println("Hello", what)
+}
+
+hello("kat programming language")
