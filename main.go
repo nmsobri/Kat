@@ -16,7 +16,7 @@ func main() {
 	p := parser.New(l)
 
 	program := p.ParseProgram()
-	//fmt.Println(program.String())
+	fmt.Println(program.String())
 
 	e := evaluator.New(program)
 	env := environment.New()

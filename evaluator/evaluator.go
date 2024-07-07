@@ -827,43 +827,51 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 		}
 
 	case *ast.NodePrefixExpr:
-		right, ok := stmt.Right.(*ast.NodeIdentifier)
-
-		if !ok {
-			msg := fmt.Sprintf("Invalid identifier: %s", stmt.Right)
-			e.Error(msg)
-			return result
-		}
-
-		rightVal, ok := env.Get(right.Name)
-
-		if !ok {
-			msg := fmt.Sprintf("Variable %s is not found", right.Name)
-			e.Error(msg)
-			return result
-		}
+		right := e.Eval(stmt.Right, env)
+		ident, isIdent := stmt.Right.(*ast.NodeIdentifier)
 
 		switch stmt.Operator {
 		case "++":
-			switch rightVal.(type) {
+			switch right.(type) {
 			case *value.ValueInt:
-				env.Set(right.Name, &value.ValueInt{rightVal.(*value.ValueInt).Value + 1})
-				return &value.ValueInt{rightVal.(*value.ValueInt).Value + 1}
+				if isIdent {
+					env.Set(ident.Name, &value.ValueInt{right.(*value.ValueInt).Value + 1})
+				}
+
+				return &value.ValueInt{right.(*value.ValueInt).Value + 1}
 
 			default:
-				msg := fmt.Sprintf("Unsupported operator: %s for type %T", stmt.Operator, rightVal)
+				msg := fmt.Sprintf("Unsupported operator: %s for type %s", stmt.Operator, util.TypeOf(right))
 				e.Error(msg)
 				return result
 			}
 
 		case "--":
-			switch rightVal.(type) {
+			switch right.(type) {
 			case *value.ValueInt:
-				env.Set(right.Name, &value.ValueInt{rightVal.(*value.ValueInt).Value - 1})
-				return &value.ValueInt{rightVal.(*value.ValueInt).Value - 1}
+				if isIdent {
+					env.Set(ident.Name, &value.ValueInt{right.(*value.ValueInt).Value - 1})
+				}
+
+				return &value.ValueInt{right.(*value.ValueInt).Value - 1}
 
 			default:
-				msg := fmt.Sprintf("Unsupported operator: %s for type %T", stmt.Operator, rightVal)
+				msg := fmt.Sprintf("Unsupported operator: %s for type %s", stmt.Operator, util.TypeOf(right))
+				e.Error(msg)
+				return result
+			}
+
+		case "-":
+			switch right.(type) {
+			case *value.ValueInt:
+				if isIdent {
+					env.Set(ident.Name, &value.ValueInt{-right.(*value.ValueInt).Value})
+				}
+
+				return &value.ValueInt{-right.(*value.ValueInt).Value}
+
+			default:
+				msg := fmt.Sprintf("Unsupported operator: %s for type %s", stmt.Operator, util.TypeOf(right))
 				e.Error(msg)
 				return result
 			}
