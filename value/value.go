@@ -87,6 +87,14 @@ func (vs *ValueStruct[T]) String() string {
 	return fmt.Sprintf("%s{%s}", vs.Name, strings.Join(valStruct, ", "))
 }
 
+type ValueMap[T any] struct {
+	*ValueKeyVal[T]
+}
+
+func (vs *ValueMap[T]) String() string {
+	return "valuemap"
+}
+
 type ValueKeyVal[T any] struct {
 	Map map[string]T
 }

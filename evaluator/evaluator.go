@@ -725,7 +725,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 		structStmtProp := structStmt.(*value.ValueStruct[value.Value]).Prop
 		keyMap := e.Eval(stmt.Values, env)
-		props := keyMap.(*value.ValueKeyVal[value.Value])
+		props := keyMap.(*value.ValueMap[value.Value])
 
 		actualProps := make([]string, 0)
 		for k := range props.Map {
@@ -756,7 +756,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 			keyVal[key.Name] = e.Eval(v, env)
 		}
 
-		return &value.ValueKeyVal[value.Value]{keyVal}
+		return &value.ValueMap[value.Value]{&value.ValueKeyVal[value.Value]{keyVal}}
 
 	case *ast.NodeModernForStmt:
 		condition := e.Eval(stmt.Condition, env)
@@ -896,29 +896,49 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 	case *ast.NodeIndexExpr:
 		identifier := e.Eval(stmt.Identifier, env)
-		array, ok := identifier.(*value.ValueArray)
 
-		if !ok {
-			ident := stmt.Identifier.(*ast.NodeIdentifier)
-			e.Error(fmt.Sprintf("Identifier: %s is not an array", ident.Name))
+		switch node := identifier.(type) {
+		case *value.ValueArray:
+			idx := e.Eval(stmt.Index, env)
+
+			index, ok := idx.(*value.ValueInt)
+
+			if !ok {
+				e.Error("Array index is not an int")
+				return result
+			}
+
+			if index.Value > int64(len(node.Value)) {
+				e.Error("Array index out of range")
+				return result
+			}
+
+			return node.Value[index.Value]
+
+		case *value.ValueMap[value.Value]:
+			idx := e.Eval(stmt.Index, env)
+
+			index, ok := idx.(*value.ValueString)
+
+			if !ok {
+				e.Error("Map index is not a string")
+				return result
+			}
+
+			val, ok := node.Map[index.Value]
+
+			if !ok {
+				msg := fmt.Sprintf("Map index %s is not found", index.Value)
+				e.Error(msg)
+				return result
+			}
+
+			return val
+
+		default:
+			e.Error(fmt.Sprintf("Unsupported index access on type %s", util.TypeOf(identifier)))
 			return result
 		}
-
-		idx := e.Eval(stmt.Index, env)
-
-		index, ok := idx.(*value.ValueInt)
-
-		if !ok {
-			e.Error("Array index is not an int")
-			return result
-		}
-
-		if index.Value > int64(len(array.Value)) {
-			e.Error("Array index out of range")
-			return result
-		}
-
-		return array.Value[index.Value]
 
 	case *ast.NodeSelf:
 		self, ok := env.Get(stmt.Name)
