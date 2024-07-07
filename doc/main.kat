@@ -40,11 +40,11 @@ fn main() {
     }
 
     if i < 3 {
-        fmt.Println("lower than 3\n")
+        fmt.Println("lower than 3")
     } else if i < 5 {
-        fmt.Println("lower than 5\n")
+        fmt.Println("lower than 5")
     } else if i < 10 {
-        fmt.Println("lower than 10\n")
+        fmt.Println("lower than 10")
     }
 
     for i > 0 {

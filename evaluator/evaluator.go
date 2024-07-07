@@ -779,43 +779,36 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 		}
 
 	case *ast.NodePostfixExpr:
-		left, ok := stmt.Left.(*ast.NodeIdentifier)
-
-		if !ok {
-			msg := fmt.Sprintf("Invalid identifier: %s", stmt.Left)
-			e.Error(msg)
-			return result
-		}
-
-		leftVal, ok := env.Get(left.Name)
-
-		if !ok {
-			msg := fmt.Sprintf("Variable %s is not found", left.Name)
-			e.Error(msg)
-			return result
-		}
+		left := e.Eval(stmt.Left, env)
+		ident, isIdent := stmt.Left.(*ast.NodeIdentifier)
 
 		switch stmt.Operator {
 		case "++":
-			switch leftVal.(type) {
+			switch left.(type) {
 			case *value.ValueInt:
-				env.Set(left.Name, &value.ValueInt{leftVal.(*value.ValueInt).Value + 1})
-				return &value.ValueInt{leftVal.(*value.ValueInt).Value}
+				if isIdent {
+					env.Set(ident.Name, &value.ValueInt{left.(*value.ValueInt).Value + 1})
+				}
+
+				return &value.ValueInt{left.(*value.ValueInt).Value}
 
 			default:
-				msg := fmt.Sprintf("Unsupported operator: %s for type %T", stmt.Operator, leftVal)
+				msg := fmt.Sprintf("Unsupported operator: %s for type %s", stmt.Operator, util.TypeOf(left))
 				e.Error(msg)
 				return result
 			}
 
 		case "--":
-			switch leftVal.(type) {
+			switch left.(type) {
 			case *value.ValueInt:
-				env.Set(left.Name, &value.ValueInt{leftVal.(*value.ValueInt).Value - 1})
-				return &value.ValueInt{leftVal.(*value.ValueInt).Value}
+				if isIdent {
+					env.Set(ident.Name, &value.ValueInt{left.(*value.ValueInt).Value - 1})
+				}
+
+				return &value.ValueInt{left.(*value.ValueInt).Value}
 
 			default:
-				msg := fmt.Sprintf("Unsupported operator: %s for type %T", stmt.Operator, leftVal)
+				msg := fmt.Sprintf("Unsupported operator: %s for type %s", stmt.Operator, util.TypeOf(left))
 				e.Error(msg)
 				return result
 			}
