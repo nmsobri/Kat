@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	source := util.ReadFile("./doc/struct.kat")
+	source := util.ReadFile("./doc/main.kat")
 
 	l := lexer.New(source)
 	p := parser.New(l)

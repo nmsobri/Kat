@@ -21,14 +21,14 @@ func New(tree ast.Stmt) *Evaluator {
 	}
 }
 
-func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Value {
+func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.Value {
 	var result value.Value = value.NULL
 
 	if e.IsError() {
 		return result
 	}
 
-	switch stmt := node.(type) {
+	switch stmt := astNode.(type) {
 
 	case *ast.NodeProgram:
 		for _, stmt := range stmt.Body {
@@ -88,17 +88,72 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 			return &value.ValueInt{val}
 
 		case "=":
-			ident := stmt.Left.(*ast.NodeIdentifier).Name
-			val := e.Eval(stmt.Right, env)
+			var ident value.Value
 
-			if _, ok := env.Get(ident); !ok {
-				msg := fmt.Sprintf("Variable %s is not found", ident)
+			switch node := stmt.Left.(type) {
+			case *ast.NodeIdentifier:
+				ident = &value.ValueString{node.Name}
+
+			case *ast.NodeBinaryExpr:
+				ident = e.Eval(node.Left, env)
+
+			default:
+				msg := fmt.Sprintf("Unrecognized assignment type: %s", util.TypeOf(stmt.Left))
 				e.Error(msg)
 				return result
 			}
 
-			env.Assign(ident, val)
-			return val
+			switch node := stmt.Left.(type) {
+			case *ast.NodeIdentifier:
+				val := e.Eval(stmt.Right, env)
+				realIdent := ident.(*value.ValueString).Value
+
+				if _, ok := env.Get(realIdent); !ok {
+					msg := fmt.Sprintf("Variable %s is not found", realIdent)
+					e.Error(msg)
+					return result
+				}
+
+				env.Assign(realIdent, val)
+				return val
+
+			case *ast.NodeBinaryExpr:
+				val := e.Eval(stmt.Right, env)
+
+				receiver, ok := ident.(*value.ValueStruct[value.Value])
+
+				if !ok {
+					msg := fmt.Sprintf("Invalid receiver type: %s", util.TypeOf(receiver))
+					e.Error(msg)
+					return result
+				}
+
+				right, ok := node.Right.(*ast.NodeIdentifier)
+
+				if !ok {
+					msg := fmt.Sprintf("Invalid identifier: %s", node.Right)
+					e.Error(msg)
+					return result
+				}
+
+				ident = &value.ValueString{Value: right.Name}
+
+				_, ok = receiver.Map[ident.(*value.ValueString).Value]
+
+				if !ok {
+					msg := fmt.Sprintf("Symbol %s is not found", ident.(*value.ValueString).Value)
+					e.Error(msg)
+					return result
+				}
+
+				receiver.Map[ident.(*value.ValueString).Value] = val
+				return result
+
+			default:
+				msg := fmt.Sprintf("Unrecognized assignment type: %s", util.TypeOf(stmt.Left))
+				e.Error(msg)
+				return result
+			}
 
 		case "<":
 			left := e.Eval(stmt.Left, env)
@@ -299,8 +354,8 @@ func (e *Evaluator) Eval(node ast.Node, env *environment.Environment) value.Valu
 				return val
 
 			case *value.ValueSelf:
-				foo, _ := env.Get(receiver.(*value.ValueSelf).Value)
-				return foo
+				self, _ := env.Get(receiver.(*value.ValueSelf).Value)
+				return self
 
 			default:
 				e.Error(fmt.Sprintf("Unknown receiverInstance type %s for dot operator", util.TypeOf(receiver)))
