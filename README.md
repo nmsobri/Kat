@@ -18,18 +18,22 @@ fn User.setAge(self, age) {
 }
 
 fn User.info(self) {
-    fmt.Print("Name is %s, age is %d, job is %s", self.name, self.age, self.job)
+    fmt.Printf("Name is %s, age is %d, job is %s", self.name, self.age, self.job)
+    fmt.Println()
 }
 
 fn say(greet) {
-    fmt.Print(greet)
+    fmt.Println(greet)
 }
 
 fn main() {
     let arr = [1,2,3,4,5]
     let foo = arr[0]
+    fmt.Println(foo)
+
     let map = {name: "sobri", location: "penang"}
     let name = map["name"]
+    fmt.Println(name)
 
     let user = User{name:"Sobri", age:99, job:"Programmer"}
     user.setAge(99)
@@ -46,15 +50,15 @@ fn main() {
     }
 
     if i < 3 {
-        fmt.Print("lower than 3\n")
+        fmt.Println("lower than 3")
     } else if i < 5 {
-        fmt.Print("lower than 5\n")
+        fmt.Println("lower than 5")
     } else if i < 10 {
-        fmt.Print("lower than 10\n")
+        fmt.Println("lower than 10")
     }
 
     for i > 0 {
-        fmt.Print(i)
+        fmt.Println(i)
         1 + i--
         1 + --i
         ---3
@@ -64,7 +68,9 @@ fn main() {
     }
 
     for let j = 0; j < 5; j++ {
-        fmt.Print(j)
+        fmt.Println(j)
     }
 }
+
+main()
 ```
