@@ -1,9 +1,0 @@
-fn return9() {
-    let retVal = 9
-    return retVal
-}
-
-fn return10(){
-    let retVal = 10
-    return retVal
-}

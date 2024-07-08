@@ -11,120 +11,120 @@ type Value interface {
 }
 
 var (
-	TRUE  = &ValueBool{true}
-	FALSE = &ValueBool{false}
-	NULL  = &ValueNull{}
+	TRUE  = &Bool{true}
+	FALSE = &Bool{false}
+	NULL  = &Null{}
 )
 
-type ValueFloat struct {
+type Float struct {
 	Value float64
 }
 
-func (vf *ValueFloat) String() string {
-	return fmt.Sprintf("%.2f", vf.Value)
+func (f *Float) String() string {
+	return fmt.Sprintf("%.2f", f.Value)
 }
 
-type ValueInt struct {
+type Int struct {
 	Value int64
 }
 
-func (vi *ValueInt) String() string {
-	return fmt.Sprintf("%d", vi.Value)
+func (i *Int) String() string {
+	return fmt.Sprintf("%d", i.Value)
 }
 
-type ValueBool struct {
+type Bool struct {
 	Value bool
 }
 
-func (vb *ValueBool) String() string {
-	return fmt.Sprintf("%t", vb.Value)
+func (b *Bool) String() string {
+	return fmt.Sprintf("%t", b.Value)
 }
 
-type ValueString struct {
+type String struct {
 	Value string
 }
 
-func (vs *ValueString) String() string {
-	return vs.Value
+func (s *String) String() string {
+	return s.Value
 }
 
-type ValueSelf struct {
+type Self struct {
 	Value string
 }
 
-func (vs *ValueSelf) String() string {
-	return vs.Value
+func (s *Self) String() string {
+	return s.Value
 }
 
-type ValueNull struct{}
+type Null struct{}
 
-func (vn *ValueNull) String() string {
+func (n *Null) String() string {
 	return "null"
 }
 
-type ValueFunction struct {
+type Function struct {
 	Args []Value
 	Body ast.Stmt
 }
 
-func (vn *ValueFunction) String() string {
+func (f *Function) String() string {
 	return "fn"
 }
 
-type ValueStruct[T any] struct {
+type Struct[T any] struct {
 	Name string
 	Prop []string
-	*ValueKeyVal[T]
+	*KeyVal[T]
 }
 
-func (vs *ValueStruct[T]) String() string {
+func (s *Struct[T]) String() string {
 	valStruct := make([]string, 0)
 
-	for _, k := range vs.Prop {
-		valStruct = append(valStruct, fmt.Sprintf("%s: %s", k, vs.Map[k]))
+	for _, k := range s.Prop {
+		valStruct = append(valStruct, fmt.Sprintf("%s: %s", k, s.Map[k]))
 	}
 
-	return fmt.Sprintf("%s{%s}", vs.Name, strings.Join(valStruct, ", "))
+	return fmt.Sprintf("%s{%s}", s.Name, strings.Join(valStruct, ", "))
 }
 
-type ValueMap[T any] struct {
-	*ValueKeyVal[T]
+type Map[T any] struct {
+	*KeyVal[T]
 }
 
-func (vs *ValueMap[T]) String() string {
+func (m *Map[T]) String() string {
 	return "valuemap"
 }
 
-type ValueKeyVal[T any] struct {
+type KeyVal[T any] struct {
 	Map map[string]T
 }
 
-func (vs *ValueKeyVal[T]) String() string {
+func (kv *KeyVal[T]) String() string {
 	return "valuekeyval"
 }
 
-type ValueReturn struct {
+type Return struct {
 	Value Value
 }
 
-func (vn *ValueReturn) String() string {
-	return fmt.Sprintf("%v", vn.Value)
+func (r *Return) String() string {
+	return fmt.Sprintf("%v", r.Value)
 }
 
-type ValueModule struct {
+type Module struct {
 	Value Value
 }
 
-func (vm *ValueModule) String() string {
-	return fmt.Sprintf("%v", vm.Value)
+func (m *Module) String() string {
+	return fmt.Sprintf("%v", m.Value)
 }
 
-type ValueArray struct {
+type Array struct {
 	Value []Value
 }
 
-func (vn *ValueArray) String() string {
-	return fmt.Sprintf("%v", vn.Value)
+func (a *Array) String() string {
+	return fmt.Sprintf("%v", a.Value)
 }
 
 type WrapperFunction struct {

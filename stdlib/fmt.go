@@ -27,7 +27,7 @@ func Printf(varargs ...value.Value) value.Value {
 func Sprintf(varargs ...value.Value) value.Value {
 	format := varargs[0].String()
 	args := buildArgs(varargs[1:])
-	return &value.ValueString{Value: fmt.Sprintf(format, args...)}
+	return &value.String{Value: fmt.Sprintf(format, args...)}
 }
 
 func buildArgs(varargs []value.Value) []any {
