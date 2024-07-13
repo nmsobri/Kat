@@ -5,6 +5,19 @@ import (
 	"kat/value"
 )
 
+var FmtFuncs = map[string]value.Value{}
+
+func init() {
+	FmtFuncs["print"] = &value.WrapperFunction{Name: "print", Fn: Print}
+	FmtFuncs["println"] = &value.WrapperFunction{Name: "println", Fn: Println}
+	FmtFuncs["printf"] = &value.WrapperFunction{Name: "printf", Fn: Printf}
+	FmtFuncs["sprintf"] = &value.WrapperFunction{Name: "sprintf", Fn: Sprintf}
+}
+
+func init() {
+	IoFuncs["input"] = &value.WrapperFunction{Name: "input", Fn: Input}
+}
+
 func Print(varargs ...value.Value) value.Value {
 	args := buildArgs(varargs)
 	fmt.Print(args...)

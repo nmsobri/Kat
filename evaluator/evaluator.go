@@ -493,9 +493,11 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 		}
 
 	case *ast.NodeFunctionCall:
-		var identifierName string
 		var receiverInstance value.Value
+		var receiverName string
+
 		var identifier value.Value
+		var identifierName string
 		var fnEnv = environment.NewWithParent(env)
 
 		switch node := stmt.Identifer.(type) {
@@ -505,6 +507,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 		case *ast.NodeBinaryExpr:
 			receiverInstance = e.Eval(node.Left, env)
+			receiverName = node.Left.(*ast.NodeIdentifier).Name
 
 			ident, ok := node.Right.(*ast.NodeIdentifier)
 
@@ -596,7 +599,8 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 				return e.Eval(valFn.Body, fnEnv)
 
 			case *value.Module:
-				valFn, ok := receiverInstance.(*value.Module).Value.(*environment.Environment).Get(identifier.(*value.String).Value)
+				valFn, ok := receiverInstance.(*value.Module).Value.(*value.Map[value.Value]).Map[receiverName].(*value.Map[value.Value]).Map[identifierName]
+				_ = valFn
 
 				if !ok {
 					msg := fmt.Sprintf("Symbol %s is not found", identifier.(*value.String).Value)
@@ -875,14 +879,15 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 		}
 
 	case *ast.NodeImportExpr:
-		//module := stmt.Path.(*ast.NodeString).Value
-		env := environment.New()
-		env.Set("Print", &value.WrapperFunction{Name: "Print", Fn: stdlib.Print})
-		env.Set("Println", &value.WrapperFunction{Name: "Println", Fn: stdlib.Println})
-		env.Set("Printf", &value.WrapperFunction{Name: "Printf", Fn: stdlib.Printf})
-		env.Set("Sprintf", &value.WrapperFunction{Name: "Sprintf", Fn: stdlib.Sprintf})
+		pkgs := &value.Map[value.Value]{KeyVal: &value.KeyVal[value.Value]{Map: make(map[string]value.Value)}}
 
-		return &value.Module{env}
+		// fmt package
+		pkgs.Map["fmt"] = &value.Map[value.Value]{&value.KeyVal[value.Value]{stdlib.FmtFuncs}}
+
+		// fmt io
+		pkgs.Map["io"] = &value.Map[value.Value]{&value.KeyVal[value.Value]{stdlib.IoFuncs}}
+
+		return &value.Module{pkgs}
 
 	case *ast.NodeArrayExpr:
 		values := make([]value.Value, 0)

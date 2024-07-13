@@ -1,4 +1,4 @@
 const fmt = import("fmt")
 
-fmt.Print("Hello World\n")
-fmt.Print("Hello Dunia\n")
+fmt.print("Hello\t World\n")
+fmt.print("Hello Dunia\n\n")

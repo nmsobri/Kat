@@ -324,9 +324,11 @@ func (p *Parser) ParseImportDecl() ast.Expr {
 }
 
 func (p *Parser) ParseNodeString() ast.Expr {
+	v, _ := strconv.Unquote(p.CurrentToken().Value)
+
 	return &ast.NodeString{
 		Token: p.CurrentToken(),
-		Value: p.CurrentToken().Value,
+		Value: v,
 	}
 }
 
