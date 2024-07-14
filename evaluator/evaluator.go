@@ -14,6 +14,18 @@ type Evaluator struct {
 	Tree   ast.Stmt
 }
 
+var Pkgs = &value.Map[value.Value]{KeyVal: &value.KeyVal[value.Value]{Map: make(map[string]value.Value)}}
+
+func init() {
+	// Register the builtin functions
+
+	// fmt package
+	Pkgs.Map["fmt"] = &value.Map[value.Value]{&value.KeyVal[value.Value]{stdlib.FmtFuncs}}
+
+	// fmt io
+	Pkgs.Map["io"] = &value.Map[value.Value]{&value.KeyVal[value.Value]{stdlib.IoFuncs}}
+}
+
 func New(tree ast.Stmt) *Evaluator {
 	return &Evaluator{
 		Tree: tree,
@@ -465,8 +477,6 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 	case *ast.NodeFunctionCall:
 		var receiverInstance value.Value
-		var receiverName string
-
 		var identifier value.Value
 		var identifierName string
 		var fnEnv = environment.NewWithParent(env)
@@ -478,8 +488,6 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 		case *ast.NodeBinaryExpr:
 			receiverInstance = e.Eval(node.Left, env)
-			receiverName = node.Left.(*ast.NodeIdentifier).Name
-
 			ident, ok := node.Right.(*ast.NodeIdentifier)
 
 			if !ok {
@@ -563,7 +571,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 				return e.Eval(valFn.Body, fnEnv)
 
 			case *value.Module:
-				valFn, ok := receiverInstance.(*value.Module).Value.(*value.Map[value.Value]).Map[receiverName].(*value.Map[value.Value]).Map[identifierName]
+				valFn, ok := receiverInstance.(*value.Module).Value.(*value.Map[value.Value]).Map[identifierName]
 
 				if !ok {
 					msg := fmt.Sprintf("Symbol %s is not found", identifier.(*value.String).Value)
@@ -823,15 +831,15 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 		}
 
 	case *ast.NodeImportExpr:
-		pkgs := &value.Map[value.Value]{KeyVal: &value.KeyVal[value.Value]{Map: make(map[string]value.Value)}}
+		path := e.Eval(stmt.Path, env)
+		pkg, ok := Pkgs.Map[path.(*value.String).Value]
 
-		// fmt package
-		pkgs.Map["fmt"] = &value.Map[value.Value]{&value.KeyVal[value.Value]{stdlib.FmtFuncs}}
+		if !ok {
+			msg := fmt.Sprintf("Package %s not found", path.(*value.String).Value)
+			return e.Error(msg)
+		}
 
-		// fmt io
-		pkgs.Map["io"] = &value.Map[value.Value]{&value.KeyVal[value.Value]{stdlib.IoFuncs}}
-
-		return &value.Module{pkgs}
+		return &value.Module{pkg}
 
 	case *ast.NodeArrayExpr:
 		values := make([]value.Value, 0)
