@@ -14,10 +14,6 @@ func init() {
 	FmtFuncs["sprintf"] = &value.WrapperFunction{Name: "sprintf", Fn: Sprintf}
 }
 
-func init() {
-	IoFuncs["input"] = &value.WrapperFunction{Name: "input", Fn: Input}
-}
-
 func Print(varargs ...value.Value) value.Value {
 	args := buildArgs(varargs)
 	fmt.Print(args...)

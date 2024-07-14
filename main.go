@@ -7,6 +7,7 @@ import (
 	"kat/lexer"
 	"kat/parser"
 	"kat/util"
+	"kat/value"
 )
 
 func main() {
@@ -20,12 +21,10 @@ func main() {
 
 	e := evaluator.New(program)
 	env := environment.New()
-	e.Eval(program, env)
+	res := e.Eval(program, env)
 
-	if e.IsError() {
-		fmt.Println("Evaluation Errors:")
-		for _, err := range e.Errors {
-			fmt.Println(err)
-		}
+	if err, ok := res.(*value.Error); ok {
+		fmt.Println(err)
 	}
+
 }

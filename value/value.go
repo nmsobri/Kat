@@ -135,3 +135,11 @@ type WrapperFunction struct {
 func (wf WrapperFunction) String() string {
 	return "wrapperfunction"
 }
+
+type Error struct {
+	Value string
+}
+
+func (e *Error) String() string {
+	return e.Value
+}
