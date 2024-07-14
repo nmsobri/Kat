@@ -17,7 +17,7 @@ type Evaluator struct {
 var Pkgs = &value.Map[value.Value]{KeyVal: &value.KeyVal[value.Value]{Map: make(map[string]value.Value)}}
 
 func init() {
-	// Register the builtin functions
+	// Register the standard library
 
 	// fmt package
 	Pkgs.Map["fmt"] = &value.Map[value.Value]{&value.KeyVal[value.Value]{stdlib.FmtFuncs}}
@@ -587,7 +587,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 				return fn.Fn(params...)
 
 			default:
-				msg := fmt.Sprintf("Unrecognized receiver type: %s", receiveryType)
+				msg := fmt.Sprintf("Unrecognized receiver type: %s", util.TypeOf(receiverInstance))
 				return e.Error(msg)
 			}
 		}

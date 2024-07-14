@@ -1,4 +1,10 @@
 const fmt = import("fmt")
 
 fmt.print("Hello\t World\n")
-fmt.print("Hello Dunia\n\n")
+fmt.print("Hello Dunia\n")
+
+let arr = [1, 2, 3, 4, 5]
+
+for let i = 0; i < 5; i++ {
+    fmt.println(arr[i])
+}

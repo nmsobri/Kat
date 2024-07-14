@@ -64,3 +64,7 @@ func (env *Environment) setWithParent(key string, value value.Value) bool {
 func (env *Environment) String() string {
 	return fmt.Sprintf("%v", env.Envs)
 }
+
+func (env *Environment) Type() value.Type {
+	return value.TYPE_ENVIRONMENT
+}
