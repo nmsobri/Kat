@@ -70,31 +70,71 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 		case "+":
 			left := e.Eval(stmt.Left, env)
+			if e.Error(left) {
+				return left
+			}
+
 			right := e.Eval(stmt.Right, env)
+			if e.Error(right) {
+				return right
+			}
+
 			val := left.(*value.Int).Value + right.(*value.Int).Value
 			return &value.Int{val}
 
 		case "-":
 			left := e.Eval(stmt.Left, env)
+			if e.Error(left) {
+				return left
+			}
+
 			right := e.Eval(stmt.Right, env)
+			if e.Error(right) {
+				return right
+			}
+
 			val := left.(*value.Int).Value - right.(*value.Int).Value
 			return &value.Int{val}
 
 		case "*":
 			left := e.Eval(stmt.Left, env)
+			if e.Error(left) {
+				return left
+			}
+
 			right := e.Eval(stmt.Right, env)
+			if e.Error(right) {
+				return right
+			}
+
 			val := left.(*value.Int).Value * right.(*value.Int).Value
 			return &value.Int{val}
 
 		case "/":
 			left := e.Eval(stmt.Left, env)
+			if e.Error(left) {
+				return left
+			}
+
 			right := e.Eval(stmt.Right, env)
+			if e.Error(right) {
+				return right
+			}
+
 			val := left.(*value.Int).Value / right.(*value.Int).Value
 			return &value.Int{val}
 
 		case "%":
 			left := e.Eval(stmt.Left, env)
+			if e.Error(left) {
+				return left
+			}
+
 			right := e.Eval(stmt.Right, env)
+			if e.Error(right) {
+				return right
+			}
+
 			val := left.(*value.Int).Value % right.(*value.Int).Value
 			return &value.Int{val}
 
@@ -108,19 +148,28 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 			case *ast.NodeBinaryExpr:
 				ident = e.Eval(node.Left, env)
 
+				if e.Error(ident) {
+					return ident
+				}
+
 			default:
 				msg := fmt.Sprintf("Unrecognized assignment type: %s", util.TypeOf(stmt.Left))
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 			switch node := stmt.Left.(type) {
 			case *ast.NodeIdentifier:
 				val := e.Eval(stmt.Right, env)
+
+				if e.Error(val) {
+					return val
+				}
+
 				realIdent := ident.(*value.String).Value
 
 				if _, ok := env.Get(realIdent); !ok {
 					msg := fmt.Sprintf("Variable %s is not found", realIdent)
-					return e.Error(msg)
+					return &value.Error{msg}
 				}
 
 				env.Assign(realIdent, val)
@@ -129,18 +178,22 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 			case *ast.NodeBinaryExpr:
 				val := e.Eval(stmt.Right, env)
 
+				if e.Error(val) {
+					return val
+				}
+
 				receiver, ok := ident.(*value.Struct[value.Value])
 
 				if !ok {
 					msg := fmt.Sprintf("Invalid receiver type: %s", util.TypeOf(receiver))
-					return e.Error(msg)
+					return &value.Error{msg}
 				}
 
 				right, ok := node.Right.(*ast.NodeIdentifier)
 
 				if !ok {
 					msg := fmt.Sprintf("Invalid identifier: %s", node.Right)
-					return e.Error(msg)
+					return &value.Error{msg}
 				}
 
 				ident = &value.String{Value: right.Name}
@@ -149,7 +202,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 				if !ok {
 					msg := fmt.Sprintf("Symbol %s is not found", ident.(*value.String).Value)
-					return e.Error(msg)
+					return &value.Error{msg}
 				}
 
 				receiver.Map[ident.(*value.String).Value] = val
@@ -157,16 +210,23 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			default:
 				msg := fmt.Sprintf("Unrecognized assignment type: %s", util.TypeOf(stmt.Left))
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 		case "<":
 			left := e.Eval(stmt.Left, env)
+			if e.Error(left) {
+				return left
+			}
+
 			right := e.Eval(stmt.Right, env)
+			if e.Error(right) {
+				return right
+			}
 
 			if util.TypeOf(left) != util.TypeOf(right) {
 				msg := fmt.Sprintf("Invalid operation %s < %s", left, right)
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 			switch left.(type) {
@@ -193,16 +253,23 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			default:
 				msg := fmt.Sprintf("Invalid operation %s < %s", left, right)
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 		case ">":
 			left := e.Eval(stmt.Left, env)
+			if e.Error(left) {
+				return left
+			}
+
 			right := e.Eval(stmt.Right, env)
+			if e.Error(right) {
+				return right
+			}
 
 			if util.TypeOf(left) != util.TypeOf(right) {
 				msg := fmt.Sprintf("Invalid operation %s > %s", left, right)
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 			switch left.(type) {
@@ -229,16 +296,23 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			default:
 				msg := fmt.Sprintf("Invalid operation %s > %s", left, right)
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 		case "<=":
 			left := e.Eval(stmt.Left, env)
+			if e.Error(left) {
+				return left
+			}
+
 			right := e.Eval(stmt.Right, env)
+			if e.Error(right) {
+				return right
+			}
 
 			if util.TypeOf(left) != util.TypeOf(right) {
 				msg := fmt.Sprintf("Invalid operation %s <= %s", left, right)
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 			switch left.(type) {
@@ -255,7 +329,14 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			case *value.Float:
 				_left := e.Eval(stmt.Left, env)
+				if e.Error(_left) {
+					return _left
+				}
+
 				_right := e.Eval(stmt.Right, env)
+				if e.Error(_right) {
+					return _right
+				}
 
 				left, _ := _left.(*value.Float)
 				right, _ := _right.(*value.Float)
@@ -268,16 +349,23 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			default:
 				msg := fmt.Sprintf("Invalid operation %s <= %s", left, right)
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 		case ">=":
 			left := e.Eval(stmt.Left, env)
+			if e.Error(left) {
+				return left
+			}
+
 			right := e.Eval(stmt.Right, env)
+			if e.Error(right) {
+				return right
+			}
 
 			if util.TypeOf(left) != util.TypeOf(right) {
 				msg := fmt.Sprintf("Invalid operation %s >= %s", left, right)
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 			switch left.(type) {
@@ -304,12 +392,19 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			default:
 				msg := fmt.Sprintf("Invalid operation %s >= %s", left, right)
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 		case "==":
 			left := e.Eval(stmt.Left, env)
+			if e.Error(left) {
+				return left
+			}
+
 			right := e.Eval(stmt.Right, env)
+			if e.Error(right) {
+				return right
+			}
 
 			if left == right {
 				return value.TRUE
@@ -319,7 +414,14 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 		case "!=":
 			left := e.Eval(stmt.Left, env)
+			if e.Error(left) {
+				return left
+			}
+
 			right := e.Eval(stmt.Right, env)
+			if e.Error(right) {
+				return right
+			}
 
 			if left != right {
 				return value.TRUE
@@ -329,6 +431,10 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 		case ".":
 			receiver := e.Eval(stmt.Left, env)
+			if e.Error(receiver) {
+				return receiver
+			}
+
 			right := stmt.Right.(*ast.NodeIdentifier).Name
 			var env *environment.Environment
 
@@ -342,7 +448,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 				if !ok {
 					msg := fmt.Sprintf("Symbol %s is not found", right)
-					return e.Error(msg)
+					return &value.Error{msg}
 				}
 
 				return val
@@ -352,7 +458,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 				if !ok {
 					msg := fmt.Sprintf("Symbol %s is not found", right)
-					return e.Error(msg)
+					return &value.Error{msg}
 				}
 
 				return val
@@ -362,21 +468,25 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 				return self
 
 			default:
-				return e.Error(fmt.Sprintf("Unknown receiverInstance type %s for dot operator", util.TypeOf(receiver)))
+				msg := fmt.Sprintf("Unknown receiverInstance type %s for dot operator", util.TypeOf(receiver))
+				return &value.Error{msg}
 			}
 
 		default:
 			msg := fmt.Sprintf("Unrecognized operator: %s", stmt.Operator)
-			return e.Error(msg)
+			return &value.Error{msg}
 		}
 
 	case *ast.NodeConstStmt:
 		ident := stmt.Identifier.(*ast.NodeIdentifier).Name
 		val := e.Eval(stmt.Value, env)
+		if e.Error(val) {
+			return val
+		}
 
 		if _, ok := env.Get(ident); ok {
 			msg := fmt.Sprintf("Constant %s already exists", ident)
-			return e.Error(msg)
+			return &value.Error{msg}
 		}
 
 		env.Set(ident, val)
@@ -384,10 +494,13 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 	case *ast.NodeLetStmt:
 		ident := stmt.Identifier.(*ast.NodeIdentifier).Name
 		val := e.Eval(stmt.Value, env)
+		if e.Error(val) {
+			return val
+		}
 
 		if _, ok := env.Get(ident); ok {
 			msg := fmt.Sprintf("Variable %s is already exists", ident)
-			return e.Error(msg)
+			return &value.Error{msg}
 		}
 
 		env.Set(ident, val)
@@ -397,7 +510,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 		if !ok {
 			msg := fmt.Sprintf("Symbol %s is not found", stmt.Name)
-			return e.Error(msg)
+			return &value.Error{msg}
 		}
 
 		return val
@@ -416,7 +529,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 		default:
 			msg := fmt.Sprintf("Unrecognized function identifier type: %s", util.TypeOf(stmt.Identifier))
-			return e.Error(msg)
+			return &value.Error{msg}
 		}
 
 		args := make([]value.Value, len(stmt.Arguements))
@@ -429,14 +542,14 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 			case *ast.NodeSelf:
 				if i != 0 {
 					msg := fmt.Sprintf("self arguement should be at position 0, detected position: %d", i)
-					return e.Error(msg)
+					return &value.Error{msg}
 				}
 
 				args[i] = &value.Self{arg.Name}
 
 			default:
 				msg := fmt.Sprintf("Unrecognized arguement type: %s", util.TypeOf(arg))
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 		}
 
@@ -447,19 +560,19 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			if !ok {
 				msg := fmt.Sprintf("Symbol %s is not exists", ident)
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 			_struct, ok := receiverVal.(*value.Struct[value.Value])
 
 			if !ok {
 				msg := fmt.Sprintf("Symbol %s is not a struct", ident)
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 			if util.InArray[string](_struct.Prop, ident) {
 				msg := fmt.Sprintf("Symbol %s already exists", ident)
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 			// No need to set the value to the environment since
@@ -469,7 +582,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 		} else {
 			if _, ok := env.Get(ident); ok {
 				msg := fmt.Sprintf("Symbol %s already exists", ident)
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 			env.Set(ident, valFn)
@@ -484,15 +597,23 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 		switch node := stmt.Identifer.(type) {
 		case *ast.NodeIdentifier:
 			identifier = e.Eval(node, env)
+			if e.Error(identifier) {
+				return identifier
+			}
+
 			identifierName = node.Name
 
 		case *ast.NodeBinaryExpr:
 			receiverInstance = e.Eval(node.Left, env)
+			if e.Error(receiverInstance) {
+				return receiverInstance
+			}
+
 			ident, ok := node.Right.(*ast.NodeIdentifier)
 
 			if !ok {
 				msg := fmt.Sprintf("Invalid identifier: %s", node.Right)
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 			identifier = &value.String{ident.Name}
@@ -503,6 +624,9 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 		params := make([]value.Value, len(stmt.Parameters))
 		for i, param := range stmt.Parameters {
 			params[i] = e.Eval(param, env)
+			if e.Error(params[i]) {
+				return params[i]
+			}
 		}
 
 		if receiverInstance != nil {
@@ -514,28 +638,28 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 				if !ok {
 					msg := fmt.Sprintf("Symbol %s is not found", receiverName)
-					return e.Error(msg)
+					return &value.Error{msg}
 				}
 
 				receiver, ok := _receiver.(*value.Struct[value.Value])
 
 				if !ok {
 					msg := fmt.Sprintf("Symbol %s is not a valid receiver", _receiver)
-					return e.Error(msg)
+					return &value.Error{msg}
 				}
 
 				_valFn, ok := receiver.Map[identifier.(*value.String).Value]
 
 				if !ok {
 					msg := fmt.Sprintf("Symbol %s is not found", identifier.(*value.String).Value)
-					return e.Error(msg)
+					return &value.Error{msg}
 				}
 
 				valFn, ok := _valFn.(*value.Function)
 
 				if !ok {
 					msg := fmt.Sprintf("Symbol %s is not a function", identifier.(*value.String).Value)
-					return e.Error(msg)
+					return &value.Error{msg}
 				}
 
 				// Start bind params to args
@@ -553,7 +677,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 				if len(fnArgs) > len(params) {
 					msg := fmt.Sprintf("Bad function arguments, expected %d, got %d", len(fnArgs), len(params))
-					return e.Error(msg)
+					return &value.Error{msg}
 				}
 
 				// Args
@@ -564,7 +688,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 					default:
 						msg := fmt.Sprintf("Unrecognized arguement type: %s", util.TypeOf(arg))
-						return e.Error(msg)
+						return &value.Error{msg}
 					}
 				}
 
@@ -575,7 +699,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 				if !ok {
 					msg := fmt.Sprintf("Symbol %s is not found", identifier.(*value.String).Value)
-					return e.Error(msg)
+					return &value.Error{msg}
 				}
 
 				fn, ok := valFn.(*value.WrapperFunction)
@@ -588,7 +712,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			default:
 				msg := fmt.Sprintf("Unrecognized receiver type: %s", util.TypeOf(receiverInstance))
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 		}
 
@@ -596,12 +720,12 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 		if !ok {
 			msg := fmt.Sprintf("Identifier %s is not a function", identifierName)
-			return e.Error(msg)
+			return &value.Error{msg}
 		}
 
 		if len(valFn.Args) > len(params) {
 			msg := fmt.Sprintf("Bad function arguments, expected %d, got %d", len(valFn.Args), len(params))
-			return e.Error(msg)
+			return &value.Error{msg}
 		}
 
 		for i, _arg := range valFn.Args {
@@ -611,16 +735,18 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			default:
 				msg := fmt.Sprintf("Unrecognized arguement type: %s", util.TypeOf(arg))
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 		}
 
-		result = e.Eval(valFn.Body, fnEnv)
-		return result
+		return e.Eval(valFn.Body, fnEnv)
 
 	case *ast.NodeBlockStmt:
 		for _, stmt := range stmt.Body {
 			result = e.Eval(stmt, env)
+			if e.Error(result) {
+				return result
+			}
 
 			if _, ok := result.(*value.Return); ok {
 				return result.(*value.Return).Value
@@ -628,10 +754,18 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 		}
 
 	case *ast.NodeReturnStmt:
-		return &value.Return{e.Eval(stmt.Value, env)}
+		result = e.Eval(stmt, env)
+		if e.Error(result) {
+			return result
+		}
+
+		return &value.Return{result}
 
 	case *ast.NodeConditionalStmt:
 		condition := e.Eval(stmt.Condition, env)
+		if e.Error(condition) {
+			return condition
+		}
 
 		if util.IsTruthy(condition) {
 			return e.Eval(stmt.ThenArm, env)
@@ -644,14 +778,14 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 		if !ok {
 			msg := fmt.Sprintf("Invalid identifier: %s", stmt.Identifier)
-			return e.Error(msg)
+			return &value.Error{msg}
 		}
 
 		_, ok = env.Get(identifier.Name)
 
 		if ok {
 			msg := fmt.Sprintf("Symbol %s already exists", identifier.Name)
-			return e.Error(msg)
+			return &value.Error{msg}
 		}
 
 		props := make([]string, 0)
@@ -662,7 +796,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			if !ok {
 				msg := fmt.Sprintf("Invalid property: %s", p)
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 			valKeyVal[prop.Name] = value.NULL
@@ -677,18 +811,22 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 		if !ok {
 			msg := fmt.Sprintf("Invalid identifier: %s", stmt.Name)
-			return e.Error(msg)
+			return &value.Error{msg}
 		}
 
 		structStmt, ok := env.Get(ident.Name)
 
 		if !ok {
 			msg := fmt.Sprintf("Struct %s is not found", ident.Name)
-			return e.Error(msg)
+			return &value.Error{msg}
 		}
 
 		structStmtProp := structStmt.(*value.Struct[value.Value]).Prop
 		keyMap := e.Eval(stmt.Values, env)
+		if e.Error(keyMap) {
+			return keyMap
+		}
+
 		props := keyMap.(*value.Map[value.Value])
 
 		actualProps := make([]string, 0)
@@ -697,7 +835,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			if !ok {
 				msg := fmt.Sprintf("Unknown field %s on %s", k, ident.Name)
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 			actualProps = append(actualProps, k)
 		}
@@ -712,36 +850,58 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			if !ok {
 				msg := fmt.Sprintf("Invalid struct key: %s", k)
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 			keyVal[key.Name] = e.Eval(v, env)
+			if e.Error(keyVal[key.Name]) {
+				return keyVal[key.Name]
+			}
 		}
 
 		return &value.Map[value.Value]{&value.KeyVal[value.Value]{keyVal}}
 
 	case *ast.NodeModernForStmt:
 		condition := e.Eval(stmt.Condition, env)
+		if e.Error(condition) {
+			return condition
+		}
 
 		for util.IsTruthy(condition) {
 			e.Eval(stmt.Body, env)
+
 			condition = e.Eval(stmt.Condition, env)
+			if e.Error(condition) {
+				return condition
+			}
 		}
 
 	case *ast.NodeClassicForStmt:
 		newEnv := environment.NewWithParent(env)
 
 		e.Eval(stmt.PreExpr, newEnv) // pre expression
+
 		condition := e.Eval(stmt.Condition, newEnv)
+		if e.Error(condition) {
+			return condition
+		}
 
 		for util.IsTruthy(condition) {
 			e.Eval(stmt.Body, newEnv)
 			e.Eval(stmt.PostExpr, newEnv) // post expression
+
 			condition = e.Eval(stmt.Condition, newEnv)
+			if e.Error(condition) {
+				return condition
+			}
 		}
 
 	case *ast.NodePostfixExpr:
 		left := e.Eval(stmt.Left, env)
+		if e.Error(left) {
+			return left
+		}
+
 		ident, isIdent := stmt.Left.(*ast.NodeIdentifier)
 
 		switch stmt.Operator {
@@ -756,7 +916,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			default:
 				msg := fmt.Sprintf("Unsupported operator: %s for type %s", stmt.Operator, util.TypeOf(left))
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 		case "--":
@@ -770,16 +930,20 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			default:
 				msg := fmt.Sprintf("Unsupported operator: %s for type %s", stmt.Operator, util.TypeOf(left))
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 		default:
 			msg := fmt.Sprintf("Unsupported operator: %s", stmt.Operator)
-			return e.Error(msg)
+			return &value.Error{msg}
 		}
 
 	case *ast.NodePrefixExpr:
 		right := e.Eval(stmt.Right, env)
+		if e.Error(right) {
+			return right
+		}
+
 		ident, isIdent := stmt.Right.(*ast.NodeIdentifier)
 
 		switch stmt.Operator {
@@ -794,7 +958,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			default:
 				msg := fmt.Sprintf("Unsupported operator: %s for type %s", stmt.Operator, util.TypeOf(right))
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 		case "--":
@@ -808,7 +972,7 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			default:
 				msg := fmt.Sprintf("Unsupported operator: %s for type %s", stmt.Operator, util.TypeOf(right))
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 		case "-":
@@ -822,21 +986,25 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			default:
 				msg := fmt.Sprintf("Unsupported operator: %s for type %s", stmt.Operator, util.TypeOf(right))
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 		default:
 			msg := fmt.Sprintf("Unsupported operator: %s", stmt.Operator)
-			return e.Error(msg)
+			return &value.Error{msg}
 		}
 
 	case *ast.NodeImportExpr:
 		path := e.Eval(stmt.Path, env)
+		if e.Error(path) {
+			return path
+		}
+
 		pkg, ok := Pkgs.Map[path.(*value.String).Value]
 
 		if !ok {
 			msg := fmt.Sprintf("Package %s not found", path.(*value.String).Value)
-			return e.Error(msg)
+			return &value.Error{msg}
 		}
 
 		return &value.Module{pkg}
@@ -845,50 +1013,69 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 		values := make([]value.Value, 0)
 
 		for _, v := range stmt.Value {
-			values = append(values, e.Eval(v, env))
+			val := e.Eval(v, env)
+
+			if e.Error(val) {
+				return val
+			}
+
+			values = append(values, val)
 		}
 
 		return &value.Array{values}
 
 	case *ast.NodeIndexExpr:
 		identifier := e.Eval(stmt.Identifier, env)
+		if e.Error(identifier) {
+			return identifier
+		}
 
 		switch node := identifier.(type) {
 		case *value.Array:
 			idx := e.Eval(stmt.Index, env)
+			if e.Error(idx) {
+				return idx
+			}
 
 			index, ok := idx.(*value.Int)
 
 			if !ok {
-				return e.Error("Array index is not an int")
+				msg := "Array index is not an int"
+				return &value.Error{msg}
 			}
 
 			if index.Value > int64(len(node.Value)) {
-				return e.Error("Array index out of range")
+				msg := "Array index out of range"
+				return &value.Error{msg}
 			}
 
 			return node.Value[index.Value]
 
 		case *value.Map[value.Value]:
 			idx := e.Eval(stmt.Index, env)
+			if e.Error(idx) {
+				return idx
+			}
 
 			index, ok := idx.(*value.String)
 
 			if !ok {
-				return e.Error("Map index is not a string")
+				msg := "Map index is not a string"
+				return &value.Error{msg}
 			}
 
 			val, ok := node.Map[index.Value]
 
 			if !ok {
 				msg := fmt.Sprintf("Map index %s is not found", index.Value)
-				return e.Error(msg)
+				return &value.Error{msg}
 			}
 
 			return val
 
 		default:
-			return e.Error(fmt.Sprintf("Unsupported index access on type %s", util.TypeOf(identifier)))
+			msg := fmt.Sprintf("Unsupported index access on type %s", util.TypeOf(identifier))
+			return &value.Error{msg}
 		}
 
 	case *ast.NodeSelf:
@@ -896,19 +1083,19 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 		if !ok {
 			msg := fmt.Sprintf("Symbol %s is not found", stmt.Name)
-			return e.Error(msg)
+			return &value.Error{msg}
 		}
 
 		return self
 
 	default:
 		msg := fmt.Sprintf("Unrecognized statement type: %T", stmt)
-		return e.Error(msg)
+		return &value.Error{msg}
 	}
 
 	return result
 }
 
-func (e *Evaluator) Error(msg string) value.Value {
-	return &value.Error{msg}
+func (e *Evaluator) Error(val value.Value) bool {
+	return val.Type() == value.TYPE_ERROR
 }
