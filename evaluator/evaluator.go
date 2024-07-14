@@ -32,6 +32,10 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 			if _, ok := result.(*value.Return); ok {
 				return result
 			}
+
+			if _, ok := result.(*value.Error); ok {
+				return result
+			}
 		}
 
 	case *ast.NodeExprStmt:
@@ -560,7 +564,6 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 
 			case *value.Module:
 				valFn, ok := receiverInstance.(*value.Module).Value.(*value.Map[value.Value]).Map[receiverName].(*value.Map[value.Value]).Map[identifierName]
-				_ = valFn
 
 				if !ok {
 					msg := fmt.Sprintf("Symbol %s is not found", identifier.(*value.String).Value)
