@@ -78,9 +78,9 @@ type NodePostfixExpr struct {
 }
 
 // #######################################################
-// #################### Node BinaryExpr ##################😀
+// ##################### Node Infix Expr #################😀
 // #######################################################
-type NodeBinaryExpr struct {
+type NodeInfixExpr struct {
 	Expression
 	Token    token.Token
 	Left     Expr

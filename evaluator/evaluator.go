@@ -55,8 +55,8 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 	case *ast.NodeString:
 		return &value.String{stmt.Value}
 
-	case *ast.NodeBinaryExpr:
-		return e.EvaluateBinaryExpr(stmt, env)
+	case *ast.NodeInfixExpr:
+		return e.EvaluateInfixExpr(stmt, env)
 
 	case *ast.NodeConstStmt:
 		return e.EvaluateConstStmt(stmt, env)
@@ -523,7 +523,7 @@ func (e *Evaluator) EvalFunctionCall(stmt *ast.NodeFunctionCall, env *environmen
 
 		identifierName = node.Name
 
-	case *ast.NodeBinaryExpr:
+	case *ast.NodeInfixExpr:
 		receiverInstance = e.Eval(node.Left, env)
 		if e.Error(receiverInstance) {
 			return receiverInstance
@@ -671,9 +671,9 @@ func (e *Evaluator) EvaluateFunctionStmt(stmt *ast.NodeFunctionStmt, env *enviro
 	case *ast.NodeIdentifier:
 		ident = stmt.Identifier.(*ast.NodeIdentifier).Name
 
-	case *ast.NodeBinaryExpr:
-		receiver = stmt.Identifier.(*ast.NodeBinaryExpr).Left.(*ast.NodeIdentifier).Name
-		ident = stmt.Identifier.(*ast.NodeBinaryExpr).Right.(*ast.NodeIdentifier).Name
+	case *ast.NodeInfixExpr:
+		receiver = stmt.Identifier.(*ast.NodeInfixExpr).Left.(*ast.NodeIdentifier).Name
+		ident = stmt.Identifier.(*ast.NodeInfixExpr).Right.(*ast.NodeIdentifier).Name
 
 	default:
 		msg := fmt.Sprintf("Unrecognized function identifier type: %s", util.TypeOf(stmt.Identifier))
@@ -786,7 +786,7 @@ func (e *Evaluator) EvaluateConstStmt(stmt *ast.NodeConstStmt, env *environment.
 	return result
 }
 
-func (e *Evaluator) EvaluateBinaryExpr(stmt *ast.NodeBinaryExpr, env *environment.Environment) value.Value {
+func (e *Evaluator) EvaluateInfixExpr(stmt *ast.NodeInfixExpr, env *environment.Environment) value.Value {
 	var result value.Value = value.NULL
 
 	switch stmt.Operator {
@@ -868,7 +868,7 @@ func (e *Evaluator) EvaluateBinaryExpr(stmt *ast.NodeBinaryExpr, env *environmen
 		case *ast.NodeIdentifier:
 			ident = &value.String{node.Name}
 
-		case *ast.NodeBinaryExpr:
+		case *ast.NodeInfixExpr:
 			ident = e.Eval(node.Left, env)
 
 			if e.Error(ident) {
@@ -898,7 +898,7 @@ func (e *Evaluator) EvaluateBinaryExpr(stmt *ast.NodeBinaryExpr, env *environmen
 			env.Assign(realIdent, val)
 			return val
 
-		case *ast.NodeBinaryExpr:
+		case *ast.NodeInfixExpr:
 			val := e.Eval(stmt.Right, env)
 
 			if e.Error(val) {

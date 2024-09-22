@@ -26,5 +26,4 @@ func main() {
 	if err, ok := res.(*value.Error); ok {
 		fmt.Println(err)
 	}
-
 }

@@ -221,7 +221,7 @@ func (p *Parser) ParseBinaryExpr(left ast.Expr) ast.Expr {
 
 	right := p.ParseExpression(p.GetOperatorPrecedence(currentToken))
 
-	return &ast.NodeBinaryExpr{
+	return &ast.NodeInfixExpr{
 		Token:    currentToken,
 		Left:     left,
 		Right:    right,
@@ -377,7 +377,7 @@ func (p *Parser) ParseNodeFunction() ast.Stmt {
 		p.ExpectToken(token.DOT)        // consume `.`
 		p.ExpectToken(token.IDENTIFIER) // consume the identifier
 
-		identifier = &ast.NodeBinaryExpr{
+		identifier = &ast.NodeInfixExpr{
 			Token:    currentToken,
 			Left:     identifier,
 			Right:    &ast.NodeIdentifier{Token: p.CurrentToken(), Name: p.CurrentToken().Value},
