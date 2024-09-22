@@ -37,10 +37,36 @@ func (c *Compiler) Compile(astNode ast.Node) error {
 		}
 
 	case *ast.NodeInfixExpr:
+		if e := c.Compile(stmt.Left); e != nil {
+			return e
+		}
 
+		if e := c.Compile(stmt.Right); e != nil {
+			return e
+		}
+
+	case *ast.NodeInteger:
+		val := &value.Int{Value: stmt.Value}
+		c.emit(code.OpConstant, c.addConstant(val))
 	}
 
 	return nil
+}
+
+func (c *Compiler) addConstant(val value.Value) int {
+	c.constants = append(c.constants, val)
+	return len(c.constants) - 1
+}
+
+func (c *Compiler) emit(opCode code.Opcode, operands ...int) int {
+	instruction := code.Make(opCode, operands...)
+	return c.addInstruction(instruction)
+}
+
+func (c *Compiler) addInstruction(instruction []byte) int {
+	posOfNewInstruction := len(c.instructions)
+	c.instructions = append(c.instructions, instruction...)
+	return posOfNewInstruction
 }
 
 func (c *Compiler) compileProgram(node *ast.NodeProgram) error {
@@ -53,7 +79,6 @@ func (c *Compiler) compileProgram(node *ast.NodeProgram) error {
 	}
 
 	return nil
-
 }
 
 func (c *Compiler) Bytecode() *Bytecode {
