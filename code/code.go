@@ -8,6 +8,18 @@ import (
 const (
 	OpConstant Opcode = iota
 	OpAdd
+	OpSub
+	OpMul
+	OpDiv
+	OpPop
+	OpTrue
+	OpFalse
+	OpEqual
+	OpNotEqual
+	OpGreaterThan
+	OpLessThan
+	OpBang
+	OpMinus
 )
 
 type Opcode byte
@@ -57,8 +69,21 @@ type Definition struct {
 }
 
 var definitions = map[Opcode]*Definition{
-	OpConstant: {"OpConstant", []int{2}}, // meaning this OpCode take one operand that have 2 byte length
-	OpAdd:      {"OpAdd", []int{}},       // meaning this OpCode take one operand that have 2 byte length
+	OpConstant:    {"OpConstant", []int{2}},   // meaning this OpCode take one operand that have 2 byte length
+	OpAdd:         {"OpAdd", []int{}},         // meaning this OpCode did not take any operand
+	OpSub:         {"OpSub", []int{}},         // meaning this OpCode did not take any operand
+	OpMul:         {"OpMul", []int{}},         // meaning this OpCode did not take any operand
+	OpDiv:         {"OpDiv", []int{}},         // meaning this OpCode did not take any operand
+	OpPop:         {"OpPop", []int{}},         // meaning this OpCode did not take any operand
+	OpTrue:        {"OpTrue", []int{}},        // meaning this OpCode did not take any operand
+	OpFalse:       {"OpFalse", []int{}},       // meaning this OpCode did not take any operand
+	OpEqual:       {"OpEqual", []int{}},       // meaning this OpCode did not take any operand
+	OpNotEqual:    {"OpNotEqual", []int{}},    // meaning this OpCode did not take any operand
+	OpGreaterThan: {"OpGreaterThan", []int{}}, // meaning this OpCode did not take any operand
+	OpLessThan:    {"OpLessThan", []int{}},    // meaning this OpCode did not take any operand
+	OpBang:        {"OpBang", []int{}},        // meaning this OpCode did not take any operand
+	OpMinus:       {"OpMinus", []int{}},       // meaning this OpCode did not take any operand
+
 }
 
 func Lookup(op Opcode) (*Definition, error) {

@@ -37,6 +37,8 @@ func (c *Compiler) Compile(astNode ast.Node) error {
 			return e
 		}
 
+		c.emit(code.OpPop)
+
 	case *ast.NodeInfixExpr:
 		if e := c.Compile(stmt.Left); e != nil {
 			return e
@@ -50,13 +52,55 @@ func (c *Compiler) Compile(astNode ast.Node) error {
 		case "+":
 			c.emit(code.OpAdd)
 
+		case "-":
+			c.emit(code.OpSub)
+
+		case "*":
+			c.emit(code.OpMul)
+
+		case "/":
+			c.emit(code.OpDiv)
+
+		case ">":
+			c.emit(code.OpGreaterThan)
+
+		case "<":
+			c.emit(code.OpLessThan)
+
+		case "==":
+			c.emit(code.OpEqual)
+
+		case "!=":
+			c.emit(code.OpNotEqual)
+
 		default:
-			return fmt.Errorf("unknown operator:%s", stmt.Operator)
+			return fmt.Errorf("unknown operator: %s", stmt.Operator)
 		}
 
 	case *ast.NodeInteger:
 		val := &value.Int{Value: stmt.Value}
 		c.emit(code.OpConstant, c.addConstant(val))
+
+	case *ast.NodeBoolean:
+		if stmt.Value {
+			c.emit(code.OpTrue)
+		} else {
+			c.emit(code.OpFalse)
+		}
+
+	case *ast.NodePrefixExpr:
+		if err := c.Compile(stmt.Right); err != nil {
+			return err
+		}
+
+		switch stmt.Operator {
+		case "-":
+			c.emit(code.OpMinus)
+		case "!":
+			c.emit(code.OpBang)
+		default:
+			return fmt.Errorf("Unknow operator %s", stmt.Operator)
+		}
 	}
 
 	return nil

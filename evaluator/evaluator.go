@@ -50,7 +50,10 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 		return &value.Float{stmt.Value}
 
 	case *ast.NodeBoolean:
-		return &value.Bool{stmt.Value}
+		if stmt.Value {
+			return value.TRUE
+		}
+		return value.FALSE
 
 	case *ast.NodeString:
 		return &value.String{stmt.Value}
