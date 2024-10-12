@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"fmt"
 	"kat/ast"
 	"kat/code"
 	"kat/value"
@@ -43,6 +44,14 @@ func (c *Compiler) Compile(astNode ast.Node) error {
 
 		if e := c.Compile(stmt.Right); e != nil {
 			return e
+		}
+
+		switch stmt.Operator {
+		case "+":
+			c.emit(code.OpAdd)
+
+		default:
+			return fmt.Errorf("unknown operator:%s", stmt.Operator)
 		}
 
 	case *ast.NodeInteger:

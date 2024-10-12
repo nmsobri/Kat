@@ -46,6 +46,13 @@ func (v *VM) Run() error {
 			v.push(v.constants[constIndex])
 			ip += 2
 
+		case code.OpAdd:
+			right := v.pop()
+			left := v.pop()
+
+			val := left.(*value.Int).Value + right.(*value.Int).Value
+			o := &value.Int{Value: val}
+			v.push(o)
 		}
 	}
 	return nil
@@ -59,4 +66,10 @@ func (v *VM) push(value value.Value) error {
 	v.stack[v.sp] = value
 	v.sp++
 	return nil
+}
+
+func (v *VM) pop() value.Value {
+	val := v.stack[v.sp-1]
+	v.sp--
+	return val
 }
