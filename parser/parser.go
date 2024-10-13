@@ -585,7 +585,14 @@ func (p *Parser) ParseStatement() ast.Stmt {
 }
 
 func (p *Parser) ParseExpressionStatement() ast.Stmt {
-	return &ast.NodeExprStmt{Expr: p.ParseExpression(token.Precedence.LOWEST)}
+	node := &ast.NodeExprStmt{Expr: p.ParseExpression(token.Precedence.LOWEST)}
+
+	// Handle optional `;` semicolon
+	if p.PeekToken().Type == token.SEMICOLON {
+		p.ConsumeToken()
+	}
+
+	return node
 }
 
 func (p *Parser) parseModernForStmt() ast.Stmt {
