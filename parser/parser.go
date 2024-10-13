@@ -67,6 +67,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.PrefixFunctions[token.MINUSMINUS] = p.ParsePrefixExpr
 	p.PrefixFunctions[token.PLUSPLUS] = p.ParsePrefixExpr
 	p.PrefixFunctions[token.IMPORT] = p.ParseImportDecl
+	p.PrefixFunctions[token.LPAREN] = p.ParseGroupExpr
 
 	// Register Infix functions
 	p.InfixFunctions[token.PLUS] = p.ParseBinaryExpr
@@ -321,6 +322,14 @@ func (p *Parser) ParseImportDecl() ast.Expr {
 		Token: currentToken,
 		Path:  path,
 	}
+}
+
+func (p *Parser) ParseGroupExpr() ast.Expr {
+	// When we parse inside group, its consider we're parsing from the beginning of the expression
+	// hence the precedence is `0`
+	node := p.ParseExpression(0)
+	p.ExpectToken(token.RPAREN)
+	return node
 }
 
 func (p *Parser) ParseNodeString() ast.Expr {
