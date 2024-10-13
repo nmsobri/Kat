@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"kat/code"
 	"kat/compiler"
+	"kat/util"
 	"kat/value"
 )
 
@@ -12,6 +13,7 @@ const STACK_SIZE = 2048
 var (
 	TRUE  = &value.Bool{Value: true}
 	FALSE = &value.Bool{Value: false}
+	NULL  = &value.Null{}
 )
 
 type VM struct {
@@ -48,14 +50,22 @@ func (v *VM) Run() error {
 		switch op {
 		case code.OpConstant:
 			constIndex := code.ReadUint16(v.instructions[ip+1:])
-			v.push(v.constants[constIndex])
+
+			if err := v.push(v.constants[constIndex]); err != nil {
+				return err
+			}
+
 			ip += 2
 
 		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv:
-			v.executeBinaryOperation(op)
+			if err := v.executeBinaryOperation(op); err != nil {
+				return err
+			}
 
 		case code.OpGreaterThan, code.OpLessThan, code.OpEqual, code.OpNotEqual:
-			v.executeComparison(op)
+			if err := v.executeComparison(op); err != nil {
+				return err
+			}
 
 		case code.OpTrue:
 			if err := v.push(TRUE); err != nil {
@@ -79,6 +89,24 @@ func (v *VM) Run() error {
 		case code.OpBang:
 			right := v.pop()
 			if err := v.executeBangOperator(right); err != nil {
+				return err
+			}
+
+		case code.OpJumpIfFalse:
+			condition := v.pop()
+			pos := int(code.ReadUint16(v.instructions[ip+1:]))
+			ip += 2 // skip jump operand
+
+			if !util.IsTruthy(condition) {
+				ip = pos - 1
+			}
+
+		case code.OpJump:
+			pos := int(code.ReadUint16(v.instructions[ip+1:]))
+			ip = pos - 1
+
+		case code.OpNull:
+			if err := v.push(NULL); err != nil {
 				return err
 			}
 		}
@@ -128,10 +156,14 @@ func (v *VM) executeComparison(op code.Opcode) error {
 
 	switch op {
 	case code.OpEqual:
-		v.push(nativeToBooleanObject(left == right))
+		if err := v.push(nativeToBooleanObject(left == right)); err != nil {
+			return err
+		}
 
 	case code.OpNotEqual:
-		v.push(nativeToBooleanObject(left != right))
+		if err := v.push(nativeToBooleanObject(left != right)); err != nil {
+			return err
+		}
 
 	default:
 		return fmt.Errorf("Unknown operator %d (%s %s)", op, left.Type(), right.Type())
@@ -169,16 +201,24 @@ func (v *VM) executeIntegerComparison(op code.Opcode, _left value.Value, _right 
 
 	switch op {
 	case code.OpEqual:
-		v.push(nativeToBooleanObject(left == right))
+		if err := v.push(nativeToBooleanObject(left == right)); err != nil {
+			return err
+		}
 
 	case code.OpNotEqual:
-		v.push(nativeToBooleanObject(left != right))
+		if err := v.push(nativeToBooleanObject(left != right)); err != nil {
+			return err
+		}
 
 	case code.OpGreaterThan:
-		v.push(nativeToBooleanObject(left > right))
+		if err := v.push(nativeToBooleanObject(left > right)); err != nil {
+			return err
+		}
 
 	case code.OpLessThan:
-		v.push(nativeToBooleanObject(left < right))
+		if err := v.push(nativeToBooleanObject(left < right)); err != nil {
+			return err
+		}
 
 	default:
 		return fmt.Errorf("Unknown operator %d", op)
@@ -210,6 +250,9 @@ func (v *VM) executeBangOperator(right value.Value) error {
 		return v.push(FALSE)
 
 	case FALSE:
+		return v.push(TRUE)
+
+	case NULL:
 		return v.push(TRUE)
 
 	default:

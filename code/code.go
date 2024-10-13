@@ -20,6 +20,9 @@ const (
 	OpLessThan
 	OpBang
 	OpMinus
+	OpJump
+	OpJumpIfFalse
+	OpNull
 )
 
 type Opcode byte
@@ -84,6 +87,9 @@ var definitions = map[Opcode]*Definition{
 	OpBang:        {"OpBang", []int{}},        // meaning this OpCode did not take any operand
 	OpMinus:       {"OpMinus", []int{}},       // meaning this OpCode did not take any operand
 
+	OpJump:        {"OpJump", []int{2}},        // meaning this OpCode take one operand that have 2 byte length
+	OpJumpIfFalse: {"OpJumpIfFalse", []int{2}}, // meaning this OpCode take one operand that have 2 byte length
+	OpNull:        {"OpNull", []int{}},         // meaning this OpCode did not take any operand
 }
 
 func Lookup(op Opcode) (*Definition, error) {

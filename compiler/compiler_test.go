@@ -78,6 +78,8 @@ func concatInstructions(s []code.Instructions) code.Instructions {
 }
 
 func testConstants(t *testing.T, expected []interface{}, actual []value.Value) error {
+	t.Helper()
+
 	if len(expected) != len(actual) {
 		return fmt.Errorf("wrong number of constants. got=%d, want=%d",
 			len(actual), len(expected))
@@ -237,6 +239,62 @@ func TestBooleanExpression(t *testing.T) {
 			input: "!true", expectedConstants: []any{}, expectedInstructions: []code.Instructions{
 				code.Make(code.OpTrue),
 				code.Make(code.OpBang),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
+func TestConditionals(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			input:             `if (true) { 10 } 33;`,
+			expectedConstants: []any{10, 33},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpTrue),
+				// 0001
+				code.Make(code.OpJumpIfFalse, 11),
+				// 0004
+				code.Make(code.OpConstant, 0),
+				// 0007
+				code.Make(code.OpPop),
+				// 0008
+				code.Make(code.OpJump, 13),
+				// 0011
+				code.Make(code.OpNull),
+				// 0012
+				code.Make(code.OpPop),
+				// 0013
+				code.Make(code.OpConstant, 1),
+				// 0015
+				code.Make(code.OpPop),
+			},
+		},
+
+		{
+			input:             `if (true) { 10 } else { 20 } 33;`,
+			expectedConstants: []any{10, 20, 33},
+			expectedInstructions: []code.Instructions{
+				// 0000
+				code.Make(code.OpTrue),
+				// 0001
+				code.Make(code.OpJumpIfFalse, 11),
+				// 0004
+				code.Make(code.OpConstant, 0),
+				// 0007
+				code.Make(code.OpPop),
+				// 0008
+				code.Make(code.OpJump, 15),
+				// 0011
+				code.Make(code.OpConstant, 1),
+				// 0014
+				code.Make(code.OpPop),
+				// 0015
+				code.Make(code.OpConstant, 2),
+				// 0018
 				code.Make(code.OpPop),
 			},
 		},
