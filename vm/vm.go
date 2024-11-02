@@ -9,6 +9,7 @@ import (
 )
 
 const STACK_SIZE = 2048
+const GLOBAL_SIZE = 65536
 
 var (
 	TRUE  = &value.Bool{Value: true}
@@ -22,6 +23,8 @@ type VM struct {
 
 	stack []value.Value
 	sp    int // Always point to the next value. Top of the stack is stack[sp-1]
+
+	globals []value.Value
 }
 
 func New(byteCode *compiler.Bytecode) *VM {
@@ -29,9 +32,16 @@ func New(byteCode *compiler.Bytecode) *VM {
 		constants:    byteCode.Constants,
 		instructions: byteCode.Instructions,
 
-		stack: make([]value.Value, STACK_SIZE),
-		sp:    0,
+		stack:   make([]value.Value, STACK_SIZE),
+		sp:      0,
+		globals: make([]value.Value, GLOBAL_SIZE),
 	}
+}
+
+func NewWithState(byteCode *compiler.Bytecode, globals []value.Value) *VM {
+	vm := New(byteCode)
+	vm.globals = globals
+	return vm
 }
 
 func (v *VM) StackTop() value.Value {
@@ -43,11 +53,12 @@ func (v *VM) StackTop() value.Value {
 }
 
 func (v *VM) Run() error {
-	// Every index in VM.instrction is a `byte` ( 8 bit ), cause the type of VM.instructions is `byte`
+	// Every index in VM.instruction is a `byte` ( 8 bit ), cause the type of VM.instructions is `byte`
 	for ip := 0; ip < len(v.instructions); ip++ {
 		op := code.Opcode(v.instructions[ip])
 
 		switch op {
+
 		case code.OpConstant:
 			constIndex := code.ReadUint16(v.instructions[ip+1:])
 
@@ -107,6 +118,23 @@ func (v *VM) Run() error {
 
 		case code.OpNull:
 			if err := v.push(NULL); err != nil {
+				return err
+			}
+
+		case code.OpSetGlobal:
+			index := code.ReadUint16(v.instructions[ip+1:])
+			ip += 2
+
+			value := v.pop()
+			v.globals[index] = value
+
+		case code.OpGetGlobal:
+			index := code.ReadUint16(v.instructions[ip+1:])
+			ip += 2
+
+			value := v.globals[index]
+
+			if err := v.push(value); err != nil {
 				return err
 			}
 		}
@@ -258,4 +286,8 @@ func (v *VM) executeBangOperator(right value.Value) error {
 	default:
 		return v.push(FALSE) // if its not a boolean value, consider everything else true, !true = false
 	}
+}
+
+func (v *VM) Globals() []value.Value {
+	return v.globals
 }

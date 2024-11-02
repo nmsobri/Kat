@@ -23,6 +23,8 @@ const (
 	OpJump
 	OpJumpIfFalse
 	OpNull
+	OpSetGlobal
+	OpGetGlobal
 )
 
 type Opcode byte
@@ -90,6 +92,8 @@ var definitions = map[Opcode]*Definition{
 	OpJump:        {"OpJump", []int{2}},        // meaning this OpCode take one operand that have 2 byte length
 	OpJumpIfFalse: {"OpJumpIfFalse", []int{2}}, // meaning this OpCode take one operand that have 2 byte length
 	OpNull:        {"OpNull", []int{}},         // meaning this OpCode did not take any operand
+	OpSetGlobal:   {"OpSetGlobal", []int{2}},   // meaning this OpCode did not take any operand
+	OpGetGlobal:   {"OpGetGlobal", []int{2}},   // meaning this OpCode did not take any operand
 }
 
 func Lookup(op Opcode) (*Definition, error) {

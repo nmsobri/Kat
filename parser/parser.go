@@ -143,6 +143,7 @@ func (p *Parser) ParseProgram() *ast.NodeProgram {
 	for p.CurrentToken().Type != token.EOF {
 		program.Body = append(program.Body, p.ParseStatement())
 
+		p.skipSemiColon()
 		p.skipEOL()
 
 		if p.PeekToken().Type == token.EOF {
@@ -551,6 +552,11 @@ func (p *Parser) skipEOL() {
 		p.ConsumeToken() // consume EOL
 	}
 }
+func (p *Parser) skipSemiColon() {
+	if p.PeekToken().Type == token.SEMICOLON {
+		p.ConsumeToken()
+	}
+}
 
 func (p *Parser) parseBlockStmt() ast.Stmt {
 	p.ExpectToken(token.LBRACE)
@@ -595,12 +601,6 @@ func (p *Parser) ParseStatement() ast.Stmt {
 
 func (p *Parser) ParseExpressionStatement() ast.Stmt {
 	node := &ast.NodeExprStmt{Expr: p.ParseExpression(token.Precedence.LOWEST)}
-
-	// Handle optional `;` semicolon
-	if p.PeekToken().Type == token.SEMICOLON {
-		p.ConsumeToken()
-	}
-
 	return node
 }
 
