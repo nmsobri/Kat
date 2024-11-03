@@ -137,6 +137,21 @@ func (v *VM) Run() error {
 			if err := v.push(value); err != nil {
 				return err
 			}
+		case code.OpArray:
+			arrayLen := code.ReadUint16(v.instructions[ip+1:])
+			endIndex := v.sp
+			startIndex := v.sp - int(arrayLen)
+
+			arrays := make([]value.Value, 0)
+			for i := startIndex; i < endIndex; i++ {
+				arrays = append(arrays, v.stack[i])
+			}
+
+			ip += 2
+			arrValue := &value.Array{Value: arrays}
+			if err := v.push(arrValue); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -167,11 +182,19 @@ func (v *VM) executeBinaryOperation(op code.Opcode) error {
 	right := v.pop()
 	left := v.pop()
 
-	if right.Type() == value.TYPE_INT && left.Type() == value.TYPE_INT {
-		return v.executeBinaryIntegerOperation(op, left, right)
-	}
+	leftType := left.Type()
+	rightType := right.Type()
 
-	return fmt.Errorf("Unsupported types for binary operation: %s %s", left.Type(), right.Type())
+	switch {
+	case leftType == value.TYPE_INT && rightType == value.TYPE_INT:
+		return v.executeBinaryIntegerOperation(op, left, right)
+
+	case leftType == value.TYPE_STRING && rightType == value.TYPE_STRING:
+		return v.executeBinaryStringOperation(op, left, right)
+
+	default:
+		return fmt.Errorf("Unsupported types for binary operation: %s %s", left.Type(), right.Type())
+	}
 }
 
 func (v *VM) executeComparison(op code.Opcode) error {
@@ -290,4 +313,17 @@ func (v *VM) executeBangOperator(right value.Value) error {
 
 func (v *VM) Globals() []value.Value {
 	return v.globals
+}
+
+func (v *VM) executeBinaryStringOperation(op code.Opcode, left, right value.Value) error {
+
+	if op != code.OpAdd {
+		return fmt.Errorf("unknown string operator : %d", op)
+	}
+
+	leftString := left.(*value.String).Value
+	rightString := right.(*value.String).Value
+
+	resultString := &value.String{Value: leftString + rightString}
+	return v.push(resultString)
 }

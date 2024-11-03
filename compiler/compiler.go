@@ -39,13 +39,13 @@ func NewWithState(symbolTable *SymbolTable) *Compiler {
 }
 
 func (c *Compiler) Compile(astNode ast.Node) error {
-	switch stmt := astNode.(type) {
+	switch node := astNode.(type) {
 
 	case *ast.NodeProgram:
-		return c.compileProgram(stmt)
+		return c.compileProgram(node)
 
 	case *ast.NodeExprStmt:
-		e := c.Compile(stmt.Expr)
+		e := c.Compile(node.Expr)
 
 		if e != nil {
 			return e
@@ -54,15 +54,15 @@ func (c *Compiler) Compile(astNode ast.Node) error {
 		c.emit(code.OpPop)
 
 	case *ast.NodeInfixExpr:
-		if e := c.Compile(stmt.Left); e != nil {
+		if e := c.Compile(node.Left); e != nil {
 			return e
 		}
 
-		if e := c.Compile(stmt.Right); e != nil {
+		if e := c.Compile(node.Right); e != nil {
 			return e
 		}
 
-		switch stmt.Operator {
+		switch node.Operator {
 		case "+":
 			c.emit(code.OpAdd)
 
@@ -88,36 +88,36 @@ func (c *Compiler) Compile(astNode ast.Node) error {
 			c.emit(code.OpNotEqual)
 
 		default:
-			return fmt.Errorf("unknown operator: %s", stmt.Operator)
+			return fmt.Errorf("unknown operator: %s", node.Operator)
 		}
 
 	case *ast.NodeInteger:
-		val := &value.Int{Value: stmt.Value}
+		val := &value.Int{Value: node.Value}
 		c.emit(code.OpConstant, c.addConstant(val))
 
 	case *ast.NodeBoolean:
-		if stmt.Value {
+		if node.Value {
 			c.emit(code.OpTrue)
 		} else {
 			c.emit(code.OpFalse)
 		}
 
 	case *ast.NodePrefixExpr:
-		if err := c.Compile(stmt.Right); err != nil {
+		if err := c.Compile(node.Right); err != nil {
 			return err
 		}
 
-		switch stmt.Operator {
+		switch node.Operator {
 		case "-":
 			c.emit(code.OpMinus)
 		case "!":
 			c.emit(code.OpBang)
 		default:
-			return fmt.Errorf("Unknow operator %s", stmt.Operator)
+			return fmt.Errorf("Unknow operator %s", node.Operator)
 		}
 
 	case *ast.NodeBlockStmt:
-		for _, node := range stmt.Body {
+		for _, node := range node.Body {
 			e := c.Compile(node)
 
 			if e != nil {
@@ -136,7 +136,7 @@ func (c *Compiler) Compile(astNode ast.Node) error {
 		//
 
 		// Put the `true` on the stack
-		if err := c.Compile(stmt.Condition); err != nil {
+		if err := c.Compile(node.Condition); err != nil {
 			return err
 		}
 
@@ -144,18 +144,18 @@ func (c *Compiler) Compile(astNode ast.Node) error {
 		ifFalseJumpPos := c.emit(code.OpJumpIfFalse, BOGUS_JUMP)
 
 		// Compile the `then` arm
-		if err := c.Compile(stmt.ThenArm); err != nil {
+		if err := c.Compile(node.ThenArm); err != nil {
 			return err
 		}
 
 		// Compile the `else` arm
-		if stmt.ElseArm != nil {
+		if node.ElseArm != nil {
 			jumpPos := c.emit(code.OpJump, BOGUS_JUMP)
 			afterJumpPos := len(c.instructions)
 
 			c.changeOperand(ifFalseJumpPos, afterJumpPos)
 
-			if err := c.Compile(stmt.ElseArm); err != nil {
+			if err := c.Compile(node.ElseArm); err != nil {
 				return err
 			}
 
@@ -174,27 +174,40 @@ func (c *Compiler) Compile(astNode ast.Node) error {
 		}
 
 	case *ast.NodeLetStmt:
-		if err := c.Compile(stmt.Value); err != nil {
+		if err := c.Compile(node.Value); err != nil {
 			return err
 		}
 
-		identifier, ok := stmt.Identifier.(*ast.NodeIdentifier)
+		identifier, ok := node.Identifier.(*ast.NodeIdentifier)
 
 		if !ok {
-			return fmt.Errorf("invalid identifier: %s", stmt.Identifier)
+			return fmt.Errorf("invalid identifier: %s", node.Identifier)
 		}
 
 		symbol := c.symbolTable.Define(identifier.Name)
 		c.emit(code.OpSetGlobal, symbol.Index)
 
 	case *ast.NodeIdentifier:
-		symbol, ok := c.symbolTable.Resolve(stmt.Name)
+		symbol, ok := c.symbolTable.Resolve(node.Name)
 
 		if !ok {
-			return fmt.Errorf("undefined variable: %s", stmt.Name)
+			return fmt.Errorf("undefined variable: %s", node.Name)
 		}
 
 		c.emit(code.OpGetGlobal, symbol.Index)
+
+	case *ast.NodeString:
+		str := &value.String{Value: node.Value}
+		c.emit(code.OpConstant, c.addConstant(str))
+
+	case *ast.NodeArrayExpr:
+		for _, v := range node.Value {
+			if err := c.Compile(v); err != nil {
+				return err
+			}
+		}
+
+		c.emit(code.OpArray, len(node.Value))
 	}
 
 	return nil

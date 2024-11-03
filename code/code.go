@@ -25,6 +25,7 @@ const (
 	OpNull
 	OpSetGlobal
 	OpGetGlobal
+	OpArray
 )
 
 type Opcode byte
@@ -94,6 +95,7 @@ var definitions = map[Opcode]*Definition{
 	OpNull:        {"OpNull", []int{}},         // meaning this OpCode did not take any operand
 	OpSetGlobal:   {"OpSetGlobal", []int{2}},   // meaning this OpCode did not take any operand
 	OpGetGlobal:   {"OpGetGlobal", []int{2}},   // meaning this OpCode did not take any operand
+	OpArray:       {"OpArray", []int{2}},       // meaning this OpCode did not take any operand
 }
 
 func Lookup(op Opcode) (*Definition, error) {
