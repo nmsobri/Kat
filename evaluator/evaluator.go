@@ -752,7 +752,7 @@ func (e *Evaluator) EvaluateIdentifier(stmt *ast.NodeIdentifier, env *environmen
 
 func (e *Evaluator) EvaluateLetStmt(stmt *ast.NodeLetStmt, env *environment.Environment) value.Value {
 	var result value.Value = value.NULL
-	ident := stmt.Identifier.(*ast.NodeIdentifier).Name
+	ident := stmt.Identifier.Value
 
 	val := e.Eval(stmt.Value, env)
 	if e.Error(val) {
@@ -770,7 +770,7 @@ func (e *Evaluator) EvaluateLetStmt(stmt *ast.NodeLetStmt, env *environment.Envi
 
 func (e *Evaluator) EvaluateConstStmt(stmt *ast.NodeConstStmt, env *environment.Environment) value.Value {
 	var result value.Value = value.NULL
-	ident := stmt.Identifier.(*ast.NodeIdentifier).Name
+	ident := stmt.Identifier.Value
 
 	val := e.Eval(stmt.Value, env)
 	if e.Error(val) {

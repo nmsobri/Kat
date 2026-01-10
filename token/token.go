@@ -31,68 +31,69 @@ var Precedence = struct {
 type TokenType string
 
 type Token struct {
-	Row   int
-	Col   int
-	Value string
-	Type  TokenType
+	Line   int
+	Column int
+	Value  string
+	Type   TokenType
 }
 
 func (t Token) String() string {
 	return fmt.Sprintf(
-		"Token{ Line: %d, Col: %d, TokenString: %s, Value: `%s` }",
-		t.Row, t.Col, t.Type, t.Value,
+		"Token{ Line: %d, Column: %d, TokenString: %s, Value: `%s` }",
+		t.Line, t.Column, t.Type, t.Value,
 	)
 }
 
 func (tt TokenType) Str() string {
-	return TokenString[tt]
-}
+	var TokenString = map[TokenType]string{
+		PLUS:          "+",
+		MINUS:         "-",
+		NEGATE:        "-",
+		BANG:          "!",
+		QUESTION:      "?",
+		MULTIPLY:      "*",
+		DIVIDE:        "/",
+		MODULO:        "%",
+		EQUAL:         "=",
+		LESS:          "<",
+		GREATER:       ">",
+		LBRACKET:      "[",
+		RBRACKET:      "]",
+		LBRACE:        "{",
+		RBRACE:        "}",
+		COLON:         ":",
+		LPAREN:        "(",
+		RPAREN:        ")",
+		COMMA:         ",",
+		SEMICOLON:     ";",
+		DOT:           ".",
+		PLUS_PLUS:     "++",
+		MINUS_MINUS:   "--",
+		EQUAL_EQUAL:   "==",
+		GREATER_EQUAL: ">=",
+		LESS_EQUAL:    "<=",
+		STRING:        "string",
+		INTEGER:       "integer",
+		FLOAT:         "float",
+		TRUE:          "true",
+		FALSE:         "false",
+		LET:           "let",
+		CONST:         "const",
+		IF:            "if",
+		ELSE:          "else",
+		FOR:           "for",
+		SELF:          "self",
+		IMPORT:        "import",
+		STRUCT:        "struct",
+		FUNCTION:      "function",
+		IDENTIFIER:    "identifier",
+		TYPE:          "types",
+		EOL:           "eol",
+		EOF:           "eof",
+		INVALID:       "invalid",
+	}
 
-var TokenString = map[TokenType]string{
-	PLUS:         "+",
-	MINUS:        "-",
-	NEGATE:       "-",
-	BANG:         "!",
-	QUESTION:     "?",
-	MULTIPLY:     "*",
-	DIVIDE:       "/",
-	MODULO:       "%",
-	EQUAL:        "=",
-	LESS:         "<",
-	GREATER:      ">",
-	LBRACKET:     "[",
-	RBRACKET:     "]",
-	LBRACE:       "{",
-	RBRACE:       "}",
-	COLON:        ":",
-	LPAREN:       "(",
-	RPAREN:       ")",
-	COMMA:        ",",
-	SEMICOLON:    ";",
-	DOT:          ".",
-	PLUSPLUS:     "++",
-	MINUSMINUS:   "--",
-	EQUALEQUAL:   "==",
-	GREATEREQUAL: ">=",
-	LESSEQUAL:    "<=",
-	STRING:       "string",
-	INTEGER:      "integer",
-	DOUBLE:       "double",
-	TRUE:         "true",
-	FALSE:        "false",
-	LET:          "let",
-	CONST:        "const",
-	IF:           "if",
-	ELSE:         "else",
-	FOR:          "for",
-	SELF:         "self",
-	IMPORT:       "import",
-	STRUCT:       "struct",
-	FUNCTION:     "function",
-	IDENTIFIER:   "identifier",
-	EOL:          "eol",
-	EOF:          "eof",
-	INVALID:      "invalid",
+	return TokenString[tt]
 }
 
 const (
@@ -120,18 +121,18 @@ const (
 	DOT       = "DOT"       // .
 
 	// Double character
-	PLUSPLUS     = "PLUSPLUS"     // ++
-	MINUSMINUS   = "MINUSMINUS"   // --
-	EQUALEQUAL   = "EQUALEQUAL"   // ==
-	NOTEQUAL     = "NOTEQUAL"     // ==
-	GREATEREQUAL = "GREATEREQUAL" // >=
-	LESSEQUAL    = "LESSEQUAL"    // <=
-	COMMENT      = "COMMENT"      // //
+	PLUS_PLUS     = "PLUS_PLUS"     // ++
+	MINUS_MINUS   = "MINUS_MINUS"   // --
+	EQUAL_EQUAL   = "EQUAL_EQUAL"   // ==
+	NOT_EQUAL     = "NOT_EQUAL"     // !=
+	GREATER_EQUAL = "GREATER_EQUAL" // >=
+	LESS_EQUAL    = "LESS_EQUAL"    // <=
+	COMMENT       = "COMMENT"       // //
 
 	// Literal
 	STRING  = "STRING"
 	INTEGER = "INTEGER"
-	DOUBLE  = "DOUBLE"
+	FLOAT   = "FLOAT"
 
 	// Keyword
 	TRUE       = "TRUE"       // true
@@ -147,6 +148,9 @@ const (
 	FUNCTION   = "FUNCTION"   // fn
 	RETURN     = "RETURN"     // return
 	IDENTIFIER = "IDENTIFIER" // any
+
+	// Annotation
+	TYPE = "TYPE"
 
 	// Special
 	EOL     = "EOL"     // End of line
@@ -168,6 +172,10 @@ func Symbol(key string) TokenType {
 		"struct": STRUCT,
 		"fn":     FUNCTION,
 		"return": RETURN,
+		"int":    TYPE,
+		"float":  TYPE,
+		"bool":   TYPE,
+		"string": TYPE,
 	}
 
 	keyword, ok := keywords[key]
@@ -185,12 +193,12 @@ func GetPrecedence(tok Token) int {
 		LBRACE: Precedence.ASSIGNMENT,
 		EQUAL:  Precedence.ASSIGNMENT,
 
-		LESS:         Precedence.COMPARISON,
-		GREATER:      Precedence.COMPARISON,
-		LESSEQUAL:    Precedence.COMPARISON,
-		GREATEREQUAL: Precedence.COMPARISON,
-		EQUALEQUAL:   Precedence.COMPARISON,
-		NOTEQUAL:     Precedence.COMPARISON,
+		LESS:          Precedence.COMPARISON,
+		GREATER:       Precedence.COMPARISON,
+		LESS_EQUAL:    Precedence.COMPARISON,
+		GREATER_EQUAL: Precedence.COMPARISON,
+		EQUAL_EQUAL:   Precedence.COMPARISON,
+		NOT_EQUAL:     Precedence.COMPARISON,
 
 		PLUS:  Precedence.SUM,
 		MINUS: Precedence.SUM,
@@ -202,12 +210,12 @@ func GetPrecedence(tok Token) int {
 		NEGATE: Precedence.PREFIX,
 		BANG:   Precedence.PREFIX,
 
-		QUESTION:   Precedence.CONDITIONAL,
-		LPAREN:     Precedence.EXPR,
-		LBRACKET:   Precedence.EXPR,
-		DOT:        Precedence.EXPR,
-		MINUSMINUS: Precedence.PREFIX,
-		PLUSPLUS:   Precedence.PREFIX,
+		QUESTION:    Precedence.CONDITIONAL,
+		LPAREN:      Precedence.EXPR,
+		LBRACKET:    Precedence.EXPR,
+		DOT:         Precedence.EXPR,
+		MINUS_MINUS: Precedence.PREFIX,
+		PLUS_PLUS:   Precedence.PREFIX,
 	}
 
 	precedence, ok := precedences[tok.Type]

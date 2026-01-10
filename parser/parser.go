@@ -18,6 +18,7 @@ import (
 	"kat/ast"
 	"kat/lexer"
 	"kat/token"
+	"kat/types"
 	"log"
 	"strconv"
 )
@@ -55,7 +56,7 @@ func New(lex *lexer.Lexer) *Parser {
 	// Register Prefix functions
 	p.PrefixFunctions[token.SELF] = p.ParseSelf
 	p.PrefixFunctions[token.INTEGER] = p.ParseNodeDigit
-	p.PrefixFunctions[token.DOUBLE] = p.ParseNodeDouble
+	p.PrefixFunctions[token.FLOAT] = p.ParseNodeFloat
 	p.PrefixFunctions[token.TRUE] = p.ParseNodeBoolean
 	p.PrefixFunctions[token.FALSE] = p.ParseNodeBoolean
 	p.PrefixFunctions[token.MINUS] = p.ParsePrefixExpr
@@ -64,8 +65,8 @@ func New(lex *lexer.Lexer) *Parser {
 	p.PrefixFunctions[token.IDENTIFIER] = p.ParseIdentifier
 	p.PrefixFunctions[token.LBRACKET] = p.ParseArrayDecl
 	p.PrefixFunctions[token.LBRACE] = p.ParseMapExpr
-	p.PrefixFunctions[token.MINUSMINUS] = p.ParsePrefixExpr
-	p.PrefixFunctions[token.PLUSPLUS] = p.ParsePrefixExpr
+	p.PrefixFunctions[token.MINUS_MINUS] = p.ParsePrefixExpr
+	p.PrefixFunctions[token.PLUS_PLUS] = p.ParsePrefixExpr
 	p.PrefixFunctions[token.IMPORT] = p.ParseImportDecl
 
 	// Register Infix functions
@@ -76,17 +77,17 @@ func New(lex *lexer.Lexer) *Parser {
 	p.InfixFunctions[token.MODULO] = p.ParseBinaryExpr
 	p.InfixFunctions[token.QUESTION] = p.ParseConditionExpr
 	p.InfixFunctions[token.LESS] = p.ParseBinaryExpr
-	p.InfixFunctions[token.LESSEQUAL] = p.ParseBinaryExpr
+	p.InfixFunctions[token.LESS_EQUAL] = p.ParseBinaryExpr
 	p.InfixFunctions[token.GREATER] = p.ParseBinaryExpr
-	p.InfixFunctions[token.GREATEREQUAL] = p.ParseBinaryExpr
+	p.InfixFunctions[token.GREATER_EQUAL] = p.ParseBinaryExpr
 	p.InfixFunctions[token.EQUAL] = p.ParseBinaryExpr
 	p.InfixFunctions[token.LPAREN] = p.ParseFunctionCall
 	p.InfixFunctions[token.LBRACKET] = p.ParseIndexExpr
 	p.InfixFunctions[token.LBRACE] = p.ParseStructExpr
-	p.InfixFunctions[token.MINUSMINUS] = p.parsePostfixExpr
-	p.InfixFunctions[token.PLUSPLUS] = p.parsePostfixExpr
-	p.InfixFunctions[token.EQUALEQUAL] = p.ParseBinaryExpr
-	p.InfixFunctions[token.NOTEQUAL] = p.ParseBinaryExpr
+	p.InfixFunctions[token.MINUS_MINUS] = p.parsePostfixExpr
+	p.InfixFunctions[token.PLUS_PLUS] = p.parsePostfixExpr
+	p.InfixFunctions[token.EQUAL_EQUAL] = p.ParseBinaryExpr
+	p.InfixFunctions[token.NOT_EQUAL] = p.ParseBinaryExpr
 	p.InfixFunctions[token.DOT] = p.ParseBinaryExpr
 
 	p.NextToken = p.Lex.NextToken()
@@ -103,9 +104,9 @@ func (p *Parser) ConsumeToken() token.Token {
 
 func (p *Parser) ExpectToken(tok token.TokenType) token.Token {
 	if p.NextToken.Type != tok {
-		log.Fatalf("Expect next token of type: %s `%s`, got: %s `%s` at line: %d, column:%d\n",
-			tok, tok.Str(), p.NextToken.Type, p.NextToken.Value,
-			p.NextToken.Row+1, p.NextToken.Col+1,
+		log.Fatalf("Expect token `%s`, but got `%s` at line:%d, column:%d\n",
+			tok.Str(), p.NextToken.Value,
+			p.NextToken.Line+1, p.NextToken.Column+1,
 		)
 
 		return token.Token{}
@@ -158,8 +159,8 @@ func (p *Parser) ParseExpression(currentPrecedence int) ast.Expr {
 
 	if !ok {
 		log.Fatalf("Could not parse prefix token: %s, value: `%s` at line: %d, column: %d",
-			p.CurrentToken().Type, p.CurrentToken().Value, p.CurrentToken().Row+1,
-			p.CurrentToken().Col+1,
+			p.CurrentToken().Type, p.CurrentToken().Value, p.CurrentToken().Line+1,
+			p.CurrentToken().Column+1,
 		)
 	}
 
@@ -172,8 +173,8 @@ func (p *Parser) ParseExpression(currentPrecedence int) ast.Expr {
 
 		if !ok {
 			log.Fatalf("Could not parse infix token: %s, value: `%s` at line: %d, column: %d",
-				p.CurrentToken().Type, p.CurrentToken().Value, p.CurrentToken().Row+1,
-				p.CurrentToken().Col+1,
+				p.CurrentToken().Type, p.CurrentToken().Value, p.CurrentToken().Line+1,
+				p.CurrentToken().Column+1,
 			)
 		}
 
@@ -184,27 +185,37 @@ func (p *Parser) ParseExpression(currentPrecedence int) ast.Expr {
 }
 
 func (p *Parser) ParseNodeDigit() ast.Expr {
-	val, e := strconv.ParseInt(p.CurrentToken().Value, 10, 64)
+	currentToken := p.CurrentToken()
+	val, e := strconv.ParseInt(currentToken.Value, 10, 64)
 
 	if e != nil {
 		log.Fatalf("Parser::Errors:%s\n", e)
 	}
 
 	return &ast.NodeInteger{
-		Token: p.CurrentToken(),
+		Expression: ast.Expression{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
+		Token: currentToken,
 		Value: val,
 	}
 }
 
-func (p *Parser) ParseNodeDouble() ast.Expr {
-	val, e := strconv.ParseFloat(p.CurrentToken().Value, 64)
+func (p *Parser) ParseNodeFloat() ast.Expr {
+	currentToken := p.CurrentToken()
+	val, e := strconv.ParseFloat(currentToken.Value, 64)
 
 	if e != nil {
 		log.Fatalf("Parser::Errors:%s\n", e)
 	}
 
 	return &ast.NodeFloat{
-		Token: p.CurrentToken(),
+		Expression: ast.Expression{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
+		Token: currentToken,
 		Value: val,
 	}
 }
@@ -222,6 +233,10 @@ func (p *Parser) ParseBinaryExpr(left ast.Expr) ast.Expr {
 	right := p.ParseExpression(p.GetOperatorPrecedence(currentToken))
 
 	return &ast.NodeBinaryExpr{
+		Expression: ast.Expression{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token:    currentToken,
 		Left:     left,
 		Right:    right,
@@ -239,6 +254,10 @@ func (p *Parser) ParsePrefixExpr() ast.Expr {
 	}
 
 	return &ast.NodePrefixExpr{
+		Expression: ast.Expression{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token:    currentToken,
 		Operator: currentToken.Value,
 		Right:    right,
@@ -247,13 +266,18 @@ func (p *Parser) ParsePrefixExpr() ast.Expr {
 
 func (p *Parser) ParseNodeBoolean() ast.Expr {
 	val := true
+	currentToken := p.CurrentToken()
 
-	if p.CurrentToken().Type == token.FALSE {
+	if currentToken.Type == token.FALSE {
 		val = false
 	}
 
 	return &ast.NodeBoolean{
-		Token: p.CurrentToken(),
+		Expression: ast.Expression{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
+		Token: currentToken,
 		Value: val,
 	}
 }
@@ -263,6 +287,10 @@ func (p *Parser) ParseIdentifier() ast.Expr {
 	identifier := currentToken.Value
 
 	return &ast.NodeIdentifier{
+		Expression: ast.Expression{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token: currentToken,
 		Name:  identifier,
 	}
@@ -273,6 +301,10 @@ func (p *Parser) ParseSelf() ast.Expr {
 	identifier := currentToken.Value
 
 	return &ast.NodeSelf{
+		Expression: ast.Expression{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token: p.CurrentToken(),
 		Name:  identifier,
 	}
@@ -287,6 +319,10 @@ func (p *Parser) ParseConditionExpr(left ast.Expr) ast.Expr {
 	elseArm := p.ParseExpression(p.GetOperatorPrecedence(currentToken) - 1)
 
 	return &ast.NodeTernaryExpr{
+		Expression: ast.Expression{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token:     currentToken,
 		Condition: left,
 		ThenArm:   thenArm,
@@ -296,13 +332,17 @@ func (p *Parser) ParseConditionExpr(left ast.Expr) ast.Expr {
 
 func (p *Parser) ParseConstDecl() ast.Stmt {
 	currentToken := p.CurrentToken()
-	identifier := p.ParseExpression(token.Precedence.ASSIGNMENT)
+	identifier := p.ExpectToken(token.IDENTIFIER)
 
 	p.ExpectToken(token.EQUAL) // consume `=`
 
 	value := p.ParseExpression(token.Precedence.LOWEST)
 
 	return &ast.NodeConstStmt{
+		Statement: ast.Statement{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token:      currentToken,
 		Identifier: identifier,
 		Value:      value,
@@ -318,16 +358,25 @@ func (p *Parser) ParseImportDecl() ast.Expr {
 	p.ExpectToken(token.RPAREN) // consume `)`
 
 	return &ast.NodeImportExpr{
+		Expression: ast.Expression{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token: currentToken,
 		Path:  path,
 	}
 }
 
 func (p *Parser) ParseNodeString() ast.Expr {
-	v, _ := strconv.Unquote(p.CurrentToken().Value)
+	currentToken := p.CurrentToken()
+	v, _ := strconv.Unquote(currentToken.Value)
 
 	return &ast.NodeString{
-		Token: p.CurrentToken(),
+		Expression: ast.Expression{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
+		Token: currentToken,
 		Value: v,
 	}
 }
@@ -362,6 +411,10 @@ func (p *Parser) ParseNodeStruct() ast.Stmt {
 	p.ExpectToken(token.RBRACE) // consume `}`
 
 	return &ast.NodeStructStmt{
+		Statement: ast.Statement{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token:      currentToken,
 		Identifier: identifier,
 		Properties: structProperties,
@@ -392,6 +445,10 @@ func (p *Parser) ParseNodeFunction() ast.Stmt {
 	body := p.parseBlockStmt()
 
 	return &ast.NodeFunctionStmt{
+		Statement: ast.Statement{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token:      currentToken,
 		Identifier: identifier,
 		Arguements: arguements,
@@ -420,6 +477,10 @@ func (p *Parser) ParseFunctionCall(left ast.Expr) ast.Expr {
 	p.ExpectToken(token.RPAREN)
 
 	return &ast.NodeFunctionCall{
+		Expression: ast.Expression{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token:      currentToken,
 		Identifer:  left,
 		Parameters: functionArgs,
@@ -428,13 +489,23 @@ func (p *Parser) ParseFunctionCall(left ast.Expr) ast.Expr {
 
 func (p *Parser) ParseLetDecl() ast.Stmt {
 	currentToken := p.CurrentToken()
-	ident := p.ParseExpression(token.Precedence.ASSIGNMENT)
+	ident := p.ExpectToken(token.IDENTIFIER)
+
+	p.ExpectToken(token.COLON)
+
+	declaredType := p.parseType()
+
 	p.ExpectToken(token.EQUAL)
 	value := p.ParseExpression(token.Precedence.LOWEST)
 
 	return &ast.NodeLetStmt{
+		Statement: ast.Statement{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token:      currentToken,
 		Identifier: ident,
+		Type:       declaredType,
 		Value:      value,
 	}
 }
@@ -455,6 +526,10 @@ func (p *Parser) ParseArrayDecl() ast.Expr {
 	p.ExpectToken(token.RBRACKET)
 
 	return &ast.NodeArrayExpr{
+		Expression: ast.Expression{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token: currentToken,
 		Value: values,
 	}
@@ -466,6 +541,10 @@ func (p *Parser) ParseIndexExpr(left ast.Expr) ast.Expr {
 	p.ExpectToken(token.RBRACKET)
 
 	return &ast.NodeIndexExpr{
+		Expression: ast.Expression{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token:      currentToken,
 		Identifier: left,
 		Index:      index,
@@ -490,6 +569,10 @@ func (p *Parser) ParseMapExpr() ast.Expr {
 	p.ExpectToken(token.RBRACE)
 
 	return &ast.NodeMapExpr{
+		Expression: ast.Expression{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token: currentToken,
 		Map:   values,
 	}
@@ -500,6 +583,10 @@ func (p *Parser) ParseStructExpr(left ast.Expr) ast.Expr {
 	values := p.ParseMapExpr()
 
 	return &ast.NodeStructExpr{
+		Expression: ast.Expression{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token:  currentToken,
 		Name:   left,
 		Values: values,
@@ -514,6 +601,10 @@ func (p *Parser) ParseIfStmt() ast.Stmt {
 	p.skipEOL()
 
 	nodeIf := &ast.NodeConditionalStmt{
+		Statement: ast.Statement{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token:     currentToken,
 		Condition: condition,
 		ThenArm:   p.parseBlockStmt(),
@@ -568,10 +659,16 @@ func (p *Parser) parseForStmt() ast.Stmt {
 }
 
 func (p *Parser) parsePostfixExpr(left ast.Expr) ast.Expr {
+	currentToken := p.CurrentToken()
+
 	return &ast.NodePostfixExpr{
-		Token:    p.CurrentToken(),
+		Expression: ast.Expression{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
+		Token:    currentToken,
 		Left:     left,
-		Operator: p.CurrentToken().Value,
+		Operator: currentToken.Value,
 	}
 }
 
@@ -594,6 +691,10 @@ func (p *Parser) parseModernForStmt() ast.Stmt {
 	body := p.parseBlockStmt()
 
 	return &ast.NodeModernForStmt{
+		Statement: ast.Statement{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token:     currentToken,
 		Condition: condition,
 		Body:      body,
@@ -613,6 +714,10 @@ func (p *Parser) parseClassicForStmt() ast.Stmt {
 	body := p.parseBlockStmt()
 
 	return &ast.NodeClassicForStmt{
+		Statement: ast.Statement{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token:     currentToken,
 		Condition: condition,
 		PreExpr:   preExpr,
@@ -626,7 +731,87 @@ func (p *Parser) parseReturnStmt() ast.Stmt {
 	expr := p.ParseExpression(token.Precedence.LOWEST)
 
 	return &ast.NodeReturnStmt{
+		Statement: ast.Statement{
+			Line:   currentToken.Line,
+			Column: currentToken.Column,
+		},
 		Token: currentToken,
 		Value: expr,
+	}
+}
+
+func (p *Parser) parseType() types.Type {
+	currentToken := p.ConsumeToken()
+
+	switch currentToken.Type {
+
+	case token.TYPE:
+		return p.parseAtomicType(currentToken)
+
+	case token.LBRACKET:
+		nextToken := p.PeekToken()
+
+		switch nextToken.Type {
+
+		// Map
+		case token.TYPE:
+			return p.parseMapType(nextToken)
+
+		// Array
+		case token.RBRACKET:
+			return p.parseArrayType(nextToken)
+
+		default:
+			log.Fatalf("unexpected token `%s` at line:%d, column:%d\n",
+				nextToken.Value, nextToken.Line+1, nextToken.Column+1,
+			)
+		}
+	}
+
+	if currentToken.Type == token.LBRACKET {
+
+	}
+
+	return p.ExpectToken(token.TYPE)
+}
+
+func (p *Parser) parseAtomicType(tok token.Token) types.Type {
+	switch tok.Value {
+	case "int":
+		return types.INT
+
+	case "float":
+		return types.FLOAT
+
+	case "string":
+		return types.STRING
+
+	case "bool":
+		return types.BOOL
+
+	default:
+		panic("unsupported atomic type")
+	}
+}
+
+// todo: need to check the keytype and valuetype to limit to int and string
+func (p *Parser) parseMapType(tok token.Token) types.Type {
+	keyType := p.ExpectToken(token.TYPE)
+	p.ExpectToken(token.RBRACKET)
+	valueType := p.ExpectToken(token.TYPE)
+
+	return types.MapType{
+		KeyType:   keyType,
+		ValueType: valueType,
+	}
+}
+
+// todo: need to check the valuetype to limit to int and string
+func (p *Parser) parseArrayType(tok token.Token) types.Type {
+	p.ExpectToken(token.RBRACKET)
+	valueType := p.ExpectToken(token.TYPE)
+
+	return types.ArrayType{
+		Type: valueType,
 	}
 }

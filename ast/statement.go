@@ -1,17 +1,29 @@
 package ast
 
 import (
-	"github.com/sanity-io/litter"
 	"kat/token"
+	"kat/types"
 	"regexp"
+
+	"github.com/sanity-io/litter"
 )
 
 // Simulate Tagged Union
 // This mean following nodes can either be Statement or Node
-type Statement struct{}
+type Statement struct {
+	Line   int
+	Column int
+}
 
 func (s Statement) stmt() {}
 func (s Statement) node() {}
+
+func (s Statement) GetLocation() Location {
+	return Location{
+		Line:   s.Line,
+		Column: s.Column,
+	}
+}
 
 // #######################################################
 // ##################### Node Program#####################😀
@@ -54,7 +66,7 @@ type NodeClassicForStmt struct {
 type NodeConstStmt struct {
 	Statement
 	Token      token.Token
-	Identifier Expr
+	Identifier token.Token
 	Value      Expr
 }
 
@@ -85,7 +97,8 @@ type NodeFunctionStmt struct {
 type NodeLetStmt struct {
 	Statement
 	Token      token.Token
-	Identifier Expr
+	Identifier token.Token
+	Type       types.Type
 	Value      Expr
 }
 

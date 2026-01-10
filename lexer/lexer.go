@@ -18,10 +18,10 @@ func New(input []byte) *Lexer {
 
 func (l *Lexer) MakeToken(col int, val string, tokenType token.TokenType) token.Token {
 	return token.Token{
-		Row:   l.Line,
-		Col:   col - l.Offset,
-		Value: val,
-		Type:  tokenType,
+		Line:   l.Line,
+		Column: col - l.Offset,
+		Value:  val,
+		Type:   tokenType,
 	}
 }
 
@@ -36,7 +36,7 @@ func (l *Lexer) NextToken() token.Token {
 		if l.PeekChar() == '+' {
 			col := l.Col
 			l.NextChar()
-			t = l.MakeToken(col, string(l.Input[col:col+2]), token.PLUSPLUS)
+			t = l.MakeToken(col, string(l.Input[col:col+2]), token.PLUS_PLUS)
 		} else {
 			t = l.MakeToken(l.Col, string(ch), token.PLUS)
 		}
@@ -45,7 +45,7 @@ func (l *Lexer) NextToken() token.Token {
 		if l.PeekChar() == '-' {
 			col := l.Col
 			l.NextChar()
-			t = l.MakeToken(col, string(l.Input[col:col+2]), token.MINUSMINUS)
+			t = l.MakeToken(col, string(l.Input[col:col+2]), token.MINUS_MINUS)
 		} else {
 			t = l.MakeToken(l.Col, string(ch), token.MINUS)
 		}
@@ -54,7 +54,7 @@ func (l *Lexer) NextToken() token.Token {
 		if l.PeekChar() == '=' {
 			col := l.Col
 			l.NextChar()
-			t = l.MakeToken(col, string(l.Input[col:col+2]), token.EQUALEQUAL)
+			t = l.MakeToken(col, string(l.Input[col:col+2]), token.EQUAL_EQUAL)
 		} else {
 			t = l.MakeToken(l.Col, string(ch), token.EQUAL)
 		}
@@ -63,7 +63,7 @@ func (l *Lexer) NextToken() token.Token {
 		if l.PeekChar() == '=' {
 			col := l.Col
 			l.NextChar()
-			t = l.MakeToken(col, string(l.Input[col:col+2]), token.NOTEQUAL)
+			t = l.MakeToken(col, string(l.Input[col:col+2]), token.NOT_EQUAL)
 		} else {
 			t = l.MakeToken(l.Col, string(ch), token.BANG)
 		}
@@ -72,7 +72,7 @@ func (l *Lexer) NextToken() token.Token {
 		if l.PeekChar() == '=' {
 			col := l.Col
 			l.NextChar()
-			t = l.MakeToken(col, string(l.Input[col:col+2]), token.LESSEQUAL)
+			t = l.MakeToken(col, string(l.Input[col:col+2]), token.LESS_EQUAL)
 		} else {
 			t = l.MakeToken(l.Col, string(ch), token.LESS)
 		}
@@ -81,7 +81,7 @@ func (l *Lexer) NextToken() token.Token {
 		if l.PeekChar() == '=' {
 			col := l.Col
 			l.NextChar()
-			t = l.MakeToken(col, string(l.Input[col:col+2]), token.GREATEREQUAL)
+			t = l.MakeToken(col, string(l.Input[col:col+2]), token.GREATER_EQUAL)
 		} else {
 			t = l.MakeToken(l.Col, string(ch), token.GREATER)
 		}
@@ -162,7 +162,7 @@ func (l *Lexer) NextToken() token.Token {
 			var tok token.TokenType = token.INTEGER
 
 			if slices.Contains(dig, 46) {
-				tok = token.DOUBLE
+				tok = token.FLOAT
 			}
 
 			t = l.MakeToken(col, string(dig), tok)

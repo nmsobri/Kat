@@ -6,10 +6,20 @@ import (
 
 // Simulate Tagged Union
 // This mean following nodes can either be Expression or Node
-type Expression struct{}
+type Expression struct {
+	Line   int
+	Column int
+}
 
 func (e Expression) expr() {}
 func (e Expression) node() {}
+
+func (e Expression) GetLocation() Location {
+	return Location{
+		Line:   e.Line,
+		Column: e.Column,
+	}
+}
 
 // #######################################################
 // ################### Node Boolean ######################😀

@@ -1,0 +1,2 @@
+let numbers: []int = [1,2,3]
+let numbers: [string]int = ["satu":1, "dua":2, "tiga":3]
