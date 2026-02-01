@@ -741,7 +741,7 @@ func (p *Parser) parseReturnStmt() ast.Stmt {
 }
 
 func (p *Parser) parseType() ast.Type {
-	currentToken := p.ConsumeToken()
+	currentToken := p.ExpectToken(token.TYPE)
 
 	switch currentToken.Type {
 
@@ -768,11 +768,7 @@ func (p *Parser) parseType() ast.Type {
 		}
 	}
 
-	if currentToken.Type == token.LBRACKET {
-
-	}
-
-	return p.ExpectToken(token.TYPE)
+	panic("unreachable")
 }
 
 func (p *Parser) parseAtomicType(tok token.Token) ast.Type {

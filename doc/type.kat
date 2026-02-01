@@ -1,2 +1,7 @@
-let numbers: []int = [1,2,3]
-let numbers: [string]int = ["satu":1, "dua":2, "tiga":3]
+let name: string = "Sylar"
+let count: int = 99
+let salary: float = 88.99
+let is: bool = true
+
+// let numbers: []int = [1,2,3]
+// let numbers: [string]int = ["satu":1, "dua":2, "tiga":3]

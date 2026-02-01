@@ -94,16 +94,16 @@ func (l *Lexer) NextToken() token.Token {
 			l.NextChar()
 			l.NextChar()
 
-			for l.PeekToken(1).Type != token.EOL &&
-				l.PeekToken(1).Type != token.EOF {
-				t = l.NextToken()
+			for l.PeekChar() != '\n' && l.PeekChar() != 0 {
+				l.NextChar()
 			}
 
-			l.NextToken()     // consume the EOL or EOF
-			t = l.NextToken() // advance to next token
-		} else {
-			t = l.MakeToken(l.Col, string(ch), token.DIVIDE)
+			l.NextChar()         // consume EOL or EOF
+			l.NextChar()         // advance to next character
+			return l.NextToken() // advance to next token and return it
 		}
+
+		t = l.MakeToken(l.Col, string(ch), token.DIVIDE)
 
 	case '%':
 		t = l.MakeToken(l.Col, string(ch), token.MODULO)
