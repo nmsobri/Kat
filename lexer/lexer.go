@@ -234,7 +234,7 @@ func (l *Lexer) IsAlphaNum(ch byte) bool {
 }
 
 func (l *Lexer) IsWhitespace(ch byte) bool {
-	return ch == ' ' || ch == '\t' || ch == '\r'
+	return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n'
 }
 
 func (l *Lexer) IsEndOfString() bool {
