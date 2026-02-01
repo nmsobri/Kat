@@ -33,7 +33,7 @@ func (c *Checker) Check(astNode ast.Node) {
 
 }
 
-func (c *Checker) Infer(expr ast.Expr) Type {
+func (c *Checker) Infer(expr ast.Expr) ast.Type {
 	switch expr.(type) {
 
 	case *ast.NodeInteger:
@@ -55,7 +55,7 @@ func (c *Checker) Infer(expr ast.Expr) Type {
 	return nil
 }
 
-func (c *Checker) SubType(a, b Type) bool {
+func (c *Checker) SubType(a, b ast.Type) bool {
 	if IsBool(a) && IsBool(b) {
 		return true
 	}

@@ -1,12 +1,16 @@
 package ast
 
 import (
+	"fmt"
 	"kat/token"
-	"kat/types"
 	"regexp"
 
 	"github.com/sanity-io/litter"
 )
+
+type Type interface {
+	fmt.Stringer
+}
 
 // Simulate Tagged Union
 // This mean following nodes can either be Statement or Node
@@ -98,7 +102,7 @@ type NodeLetStmt struct {
 	Statement
 	Token      token.Token
 	Identifier token.Token
-	Type       types.Type
+	Type       Type
 	Value      Expr
 }
 

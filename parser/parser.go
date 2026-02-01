@@ -740,7 +740,7 @@ func (p *Parser) parseReturnStmt() ast.Stmt {
 	}
 }
 
-func (p *Parser) parseType() types.Type {
+func (p *Parser) parseType() ast.Type {
 	currentToken := p.ConsumeToken()
 
 	switch currentToken.Type {
@@ -775,7 +775,7 @@ func (p *Parser) parseType() types.Type {
 	return p.ExpectToken(token.TYPE)
 }
 
-func (p *Parser) parseAtomicType(tok token.Token) types.Type {
+func (p *Parser) parseAtomicType(tok token.Token) ast.Type {
 	switch tok.Value {
 	case "int":
 		return types.INT
@@ -795,7 +795,7 @@ func (p *Parser) parseAtomicType(tok token.Token) types.Type {
 }
 
 // todo: need to check the keytype and valuetype to limit to int and string
-func (p *Parser) parseMapType(tok token.Token) types.Type {
+func (p *Parser) parseMapType(tok token.Token) ast.Type {
 	keyType := p.ExpectToken(token.TYPE)
 	p.ExpectToken(token.RBRACKET)
 	valueType := p.ExpectToken(token.TYPE)
@@ -807,7 +807,7 @@ func (p *Parser) parseMapType(tok token.Token) types.Type {
 }
 
 // todo: need to check the valuetype to limit to int and string
-func (p *Parser) parseArrayType(tok token.Token) types.Type {
+func (p *Parser) parseArrayType(tok token.Token) ast.Type {
 	p.ExpectToken(token.RBRACKET)
 	valueType := p.ExpectToken(token.TYPE)
 
