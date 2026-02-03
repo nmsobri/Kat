@@ -16,12 +16,19 @@ func New(input []byte) *Lexer {
 	return &Lexer{Col: 0, Line: 0, Offset: 0, Input: input}
 }
 
-func (l *Lexer) MakeToken(col int, val string, tokenType token.TokenType) token.Token {
+func (l *Lexer) MakeToken(col int, val string, tokenType token.Type, tokenKind ...token.Type) token.Token {
+	kind := token.Type(val)
+
+	if len(tokenKind) > 0 {
+		kind = tokenKind[0]
+	}
+
 	return token.Token{
-		Line:   l.Line,
-		Column: col - l.Offset,
-		Value:  val,
-		Type:   tokenType,
+		Line:     l.Line,
+		Column:   col - l.Offset,
+		Value:    val,
+		Type:     tokenType,
+		TypeKind: kind,
 	}
 }
 
@@ -35,7 +42,7 @@ func (l *Lexer) NextToken() token.Token {
 	case '+':
 		if l.PeekChar() == '+' {
 			col := l.Col
-			l.NextChar()
+			l.AdvanceChar()
 			t = l.MakeToken(col, string(l.Input[col:col+2]), token.PLUS_PLUS)
 		} else {
 			t = l.MakeToken(l.Col, string(ch), token.PLUS)
@@ -44,7 +51,7 @@ func (l *Lexer) NextToken() token.Token {
 	case '-':
 		if l.PeekChar() == '-' {
 			col := l.Col
-			l.NextChar()
+			l.AdvanceChar()
 			t = l.MakeToken(col, string(l.Input[col:col+2]), token.MINUS_MINUS)
 		} else {
 			t = l.MakeToken(l.Col, string(ch), token.MINUS)
@@ -53,7 +60,7 @@ func (l *Lexer) NextToken() token.Token {
 	case '=':
 		if l.PeekChar() == '=' {
 			col := l.Col
-			l.NextChar()
+			l.AdvanceChar()
 			t = l.MakeToken(col, string(l.Input[col:col+2]), token.EQUAL_EQUAL)
 		} else {
 			t = l.MakeToken(l.Col, string(ch), token.EQUAL)
@@ -62,7 +69,7 @@ func (l *Lexer) NextToken() token.Token {
 	case '!':
 		if l.PeekChar() == '=' {
 			col := l.Col
-			l.NextChar()
+			l.AdvanceChar()
 			t = l.MakeToken(col, string(l.Input[col:col+2]), token.NOT_EQUAL)
 		} else {
 			t = l.MakeToken(l.Col, string(ch), token.BANG)
@@ -71,7 +78,7 @@ func (l *Lexer) NextToken() token.Token {
 	case '<':
 		if l.PeekChar() == '=' {
 			col := l.Col
-			l.NextChar()
+			l.AdvanceChar()
 			t = l.MakeToken(col, string(l.Input[col:col+2]), token.LESS_EQUAL)
 		} else {
 			t = l.MakeToken(l.Col, string(ch), token.LESS)
@@ -80,7 +87,7 @@ func (l *Lexer) NextToken() token.Token {
 	case '>':
 		if l.PeekChar() == '=' {
 			col := l.Col
-			l.NextChar()
+			l.AdvanceChar()
 			t = l.MakeToken(col, string(l.Input[col:col+2]), token.GREATER_EQUAL)
 		} else {
 			t = l.MakeToken(l.Col, string(ch), token.GREATER)
@@ -91,15 +98,15 @@ func (l *Lexer) NextToken() token.Token {
 
 	case '/':
 		if l.PeekChar() == '/' {
-			l.NextChar()
-			l.NextChar()
+			l.AdvanceChar()
+			l.AdvanceChar()
 
 			for l.PeekChar() != '\n' && l.PeekChar() != 0 {
-				l.NextChar()
+				l.AdvanceChar()
 			}
 
-			l.NextChar()         // consume EOL or EOF
-			l.NextChar()         // advance to next character
+			l.AdvanceChar()      // consume EOL or EOF
+			l.AdvanceChar()      // advance to next character
 			return l.NextToken() // advance to next token and return it
 		}
 
@@ -109,7 +116,15 @@ func (l *Lexer) NextToken() token.Token {
 		t = l.MakeToken(l.Col, string(ch), token.MODULO)
 
 	case '[':
-		t = l.MakeToken(l.Col, string(ch), token.LBRACKET)
+		if l.PeekChar() == ']' { // []float, []int, []string
+			l.AdvanceChar() // ]
+			l.AdvanceChar() // type
+			arrayType := l.MakeIdentifier()
+			symbol := "array"
+			t = l.MakeToken(l.Col, string(arrayType), token.Symbol(symbol), "array")
+		} else {
+			t = l.MakeToken(l.Col, string(ch), token.LBRACKET)
+		}
 
 	case ']':
 		t = l.MakeToken(l.Col, string(ch), token.RBRACKET)
@@ -159,7 +174,7 @@ func (l *Lexer) NextToken() token.Token {
 			col := l.Col
 			dig := l.MakeDigit()
 
-			var tok token.TokenType = token.INTEGER
+			var tok token.Type = token.INTEGER
 
 			if slices.Contains(dig, 46) {
 				tok = token.FLOAT
@@ -172,7 +187,6 @@ func (l *Lexer) NextToken() token.Token {
 			unknown := l.MakeIdentifier()
 			symbol := string(unknown)
 			t = l.MakeToken(col, symbol, token.Symbol(symbol))
-
 		} else {
 			col := l.Col
 			invalid := l.MakeInvalid()
@@ -180,7 +194,7 @@ func (l *Lexer) NextToken() token.Token {
 		}
 	}
 
-	l.NextChar()
+	l.AdvanceChar()
 	return t
 }
 
@@ -205,13 +219,20 @@ func (l *Lexer) Char() byte {
 	return 0
 }
 
-func (l *Lexer) NextChar() {
+func (l *Lexer) AdvanceChar() {
+	l.SkipWhitespace()
 	l.Col++
 }
 
 func (l *Lexer) PeekChar() byte {
-	if l.Col+1 < len(l.Input) {
-		return l.Input[l.Col+1]
+	col := l.Col
+	l.Col++
+
+	if l.Col < len(l.Input) {
+		l.SkipWhitespace()
+		ch := l.Input[l.Col]
+		l.Col = col
+		return ch
 	}
 
 	return 0
@@ -243,16 +264,16 @@ func (l *Lexer) IsEndOfString() bool {
 
 func (l *Lexer) SkipWhitespace() {
 	for l.Col < len(l.Input) && l.IsWhitespace(l.Input[l.Col]) {
-		l.NextChar()
+		l.Col++
 	}
 }
 
 func (l *Lexer) MakeString() []byte {
 	start := l.Col
-	l.NextChar() // skip first `"` so when we find next `"` it mark end of string
+	l.AdvanceChar() // skip first `"` so when we find next `"` it mark end of string
 
 	for !l.IsEndOfString() {
-		l.NextChar()
+		l.AdvanceChar()
 	}
 
 	end := l.Col
@@ -263,7 +284,7 @@ func (l *Lexer) MakeDigit() []byte {
 	start := l.Col
 
 	for l.IsDouble(l.Char()) {
-		l.NextChar()
+		l.AdvanceChar()
 	}
 
 	end := l.Col
@@ -276,7 +297,7 @@ func (l *Lexer) MakeIdentifier() []byte {
 	start := l.Col
 
 	for l.IsAlphaNum(l.Char()) {
-		l.NextChar()
+		l.AdvanceChar()
 	}
 
 	end := l.Col
@@ -288,7 +309,7 @@ func (l *Lexer) MakeInvalid() []byte {
 	start := l.Col
 
 	for l.Char() != 0 && !l.IsWhitespace(l.Char()) {
-		l.NextChar()
+		l.AdvanceChar()
 	}
 
 	end := l.Col

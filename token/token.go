@@ -28,13 +28,14 @@ var Precedence = struct {
 	EXPR:        9,
 }
 
-type TokenType string
+type Type string
 
 type Token struct {
-	Line   int
-	Column int
-	Value  string
-	Type   TokenType
+	Line     int
+	Column   int
+	Value    string
+	Type     Type
+	TypeKind Type
 }
 
 func (t Token) String() string {
@@ -44,8 +45,8 @@ func (t Token) String() string {
 	)
 }
 
-func (tt TokenType) Str() string {
-	var TokenString = map[TokenType]string{
+func (tt Type) Str() string {
+	var TokenString = map[Type]string{
 		PLUS:          "+",
 		MINUS:         "-",
 		NEGATE:        "-",
@@ -158,8 +159,8 @@ const (
 	INVALID = "INVALID" // End of file
 )
 
-func Symbol(key string) TokenType {
-	keywords := map[string]TokenType{
+func Symbol(key string) Type {
+	keywords := map[string]Type{
 		"true":   TRUE,
 		"false":  FALSE,
 		"let":    LET,
@@ -176,6 +177,7 @@ func Symbol(key string) TokenType {
 		"float":  TYPE,
 		"bool":   TYPE,
 		"string": TYPE,
+		"array":  TYPE,
 	}
 
 	keyword, ok := keywords[key]
@@ -189,7 +191,7 @@ func Symbol(key string) TokenType {
 
 // Precedence is only for infix expression i guess
 func GetPrecedence(tok Token) int {
-	precedences := map[TokenType]int{
+	precedences := map[Type]int{
 		LBRACE: Precedence.ASSIGNMENT,
 		EQUAL:  Precedence.ASSIGNMENT,
 

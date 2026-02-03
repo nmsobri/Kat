@@ -12,50 +12,76 @@ string
 bool
 */
 
-type AtomicType struct {
+type Atomic struct {
 	Type string
 }
 
-func (t AtomicType) String() string {
+func (t Atomic) String() string {
 	return t.Type
 }
 
-type ArrayType struct {
-	Type ast.Type
+type Array struct {
+	Type  string
+	Value string
 }
 
-func (t ArrayType) String() string {
-	return fmt.Sprintf("[%s]", t.Type)
+func (t Array) String() string {
+	return fmt.Sprintf("[]%s", t.Value)
 }
 
-type MapType struct {
+type Map struct {
 	KeyType   ast.Type
 	ValueType ast.Type
 }
 
-func (t MapType) String() string {
+func (t Map) String() string {
 	return fmt.Sprintf("[%s]%s", t.KeyType, t.ValueType)
 }
 
 var (
-	INT    = AtomicType{Type: "int"}
-	FLOAT  = AtomicType{Type: "float"}
-	BOOL   = AtomicType{Type: "bool"}
-	STRING = AtomicType{Type: "string"}
+	INT    = Atomic{Type: "int"}
+	FLOAT  = Atomic{Type: "float"}
+	BOOL   = Atomic{Type: "bool"}
+	STRING = Atomic{Type: "string"}
+	ARRAY  = func(t string) ast.Type { return Array{Type: "array", Value: t} }
 )
 
 func IsInt(t ast.Type) bool {
-	return t.(AtomicType).Type == "int"
+	if _, ok := t.(Atomic); ok {
+		return t.(Atomic).Type == "int"
+	}
+
+	return false
 }
 
 func IsFloat(t ast.Type) bool {
-	return t.(AtomicType).Type == "float"
+	if _, ok := t.(Atomic); ok {
+		return t.(Atomic).Type == "float"
+	}
+
+	return false
 }
 
 func IsBool(t ast.Type) bool {
-	return t.(AtomicType).Type == "bool"
+	if _, ok := t.(Atomic); ok {
+		return t.(Atomic).Type == "bool"
+	}
+
+	return false
 }
 
 func IsString(t ast.Type) bool {
-	return t.(AtomicType).Type == "string"
+	if _, ok := t.(Atomic); ok {
+		return t.(Atomic).Type == "string"
+	}
+
+	return false
+}
+
+func IsArray(t ast.Type) bool {
+	if _, ok := t.(Array); ok {
+		return t.(Array).Type == "array"
+	}
+
+	return false
 }

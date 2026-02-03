@@ -31,17 +31,17 @@ type Parser struct {
 	Lex                *lexer.Lexer
 	Token              token.Token
 	NextToken          token.Token
-	PrefixFunctions    map[token.TokenType]PrefixParselet
-	InfixFunctions     map[token.TokenType]InfixParselet
-	StatementFunctions map[token.TokenType]StatementParselet
+	PrefixFunctions    map[token.Type]PrefixParselet
+	InfixFunctions     map[token.Type]InfixParselet
+	StatementFunctions map[token.Type]StatementParselet
 }
 
 func New(lex *lexer.Lexer) *Parser {
 	p := &Parser{
 		Lex:                lex,
-		PrefixFunctions:    make(map[token.TokenType]PrefixParselet),
-		InfixFunctions:     make(map[token.TokenType]InfixParselet),
-		StatementFunctions: make(map[token.TokenType]StatementParselet),
+		PrefixFunctions:    make(map[token.Type]PrefixParselet),
+		InfixFunctions:     make(map[token.Type]InfixParselet),
+		StatementFunctions: make(map[token.Type]StatementParselet),
 	}
 
 	// Regisgter statement functions
@@ -102,7 +102,7 @@ func (p *Parser) ConsumeToken() token.Token {
 	return p.Token
 }
 
-func (p *Parser) ExpectToken(tok token.TokenType) token.Token {
+func (p *Parser) ExpectToken(tok token.Type) token.Token {
 	if p.NextToken.Type != tok {
 		log.Fatalf("Expect token `%s`, but got `%s` at line:%d, column:%d\n",
 			tok.Str(), p.NextToken.Value,
@@ -743,30 +743,50 @@ func (p *Parser) parseReturnStmt() ast.Stmt {
 func (p *Parser) parseType() ast.Type {
 	currentToken := p.ExpectToken(token.TYPE)
 
-	switch currentToken.Type {
+	switch currentToken.TypeKind {
+	case "int":
+		return types.INT
 
-	case token.TYPE:
-		return p.parseAtomicType(currentToken)
+	case "float":
+		return types.FLOAT
 
-	case token.LBRACKET:
-		nextToken := p.PeekToken()
+	case "string":
+		return types.STRING
 
-		switch nextToken.Type {
+	case "bool":
+		return types.BOOL
 
-		// Map
-		case token.TYPE:
-			return p.parseMapType(nextToken)
+	case "array":
+		return types.ARRAY(currentToken.Value)
 
-		// Array
-		case token.RBRACKET:
-			return p.parseArrayType(nextToken)
-
-		default:
-			log.Fatalf("unexpected token `%s` at line:%d, column:%d\n",
-				nextToken.Value, nextToken.Line+1, nextToken.Column+1,
-			)
-		}
+	default:
+		panic("unsupported atomic type")
 	}
+
+	//switch currentToken.Type {
+	//
+	//case token.TYPE:
+	//	return p.parseAtomicType(currentToken)
+	//
+	//case token.LBRACKET:
+	//	nextToken := p.PeekToken()
+	//
+	//	switch nextToken.Type {
+	//
+	//	// Map
+	//	case token.TYPE:
+	//		return p.parseMapType(nextToken)
+	//
+	//	// Array
+	//	case token.RBRACKET:
+	//		return p.parseArrayType(nextToken)
+	//
+	//	default:
+	//		log.Fatalf("unexpected token `%s` at line:%d, column:%d\n",
+	//			nextToken.Value, nextToken.Line+1, nextToken.Column+1,
+	//		)
+	//	}
+	//}
 
 	panic("unreachable")
 }
@@ -796,7 +816,7 @@ func (p *Parser) parseMapType(tok token.Token) ast.Type {
 	p.ExpectToken(token.RBRACKET)
 	valueType := p.ExpectToken(token.TYPE)
 
-	return types.MapType{
+	return types.Map{
 		KeyType:   keyType,
 		ValueType: valueType,
 	}
@@ -807,7 +827,7 @@ func (p *Parser) parseArrayType(tok token.Token) ast.Type {
 	p.ExpectToken(token.RBRACKET)
 	valueType := p.ExpectToken(token.TYPE)
 
-	return types.ArrayType{
-		Type: valueType,
+	return types.Array{
+		Type: valueType.Value,
 	}
 }

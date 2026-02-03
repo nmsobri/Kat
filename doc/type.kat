@@ -1,6 +1,8 @@
-// let name: string = "Sylar"
-// let count: int = 99
-// let salary: float = 88.9
-// let is: bool = true
-let numbers: []int = [1,2,3]
+let name: string = "Sylar"
+let count: int = 99
+let salary: float = 88.9
+let is: bool = true
+
+let numbers: []float = [1, 2, "hello"]
+
 // let numbers: [string]int = ["satu":1, "dua":2, "tiga":3]

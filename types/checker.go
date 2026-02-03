@@ -18,12 +18,12 @@ func (c *Checker) Check(astNode ast.Node) {
 
 	case *ast.NodeLetStmt:
 		declaredType := node.Type
-		expressionType := c.Infer(node.Value)
+		inferredType := c.Infer(node.Value)
 		location := node.Value.GetLocation()
 
-		if !c.SubType(declaredType, expressionType) {
+		if !c.SubType(declaredType, inferredType) {
 			log.Fatalf("expected type %s, but got %s at line:%d, column:%d",
-				declaredType, expressionType, location.Line, location.Column,
+				declaredType, inferredType, location.Line, location.Column,
 			)
 		}
 
@@ -34,7 +34,7 @@ func (c *Checker) Check(astNode ast.Node) {
 }
 
 func (c *Checker) Infer(expr ast.Expr) ast.Type {
-	switch expr.(type) {
+	switch node := expr.(type) {
 
 	case *ast.NodeInteger:
 		return INT
@@ -48,8 +48,26 @@ func (c *Checker) Infer(expr ast.Expr) ast.Type {
 	case *ast.NodeBoolean:
 		return BOOL
 
+	case *ast.NodeArrayExpr:
+		arrayType := c.Infer(node.Value[0]) // get array type from first element
+
+		for _, v := range node.Value {
+			elementType := c.Infer(v)
+
+			// todo: expression: [1,2, "hello"] gave: 026/02/03 14:04:32 expected type int, but got string at line:99, column:99999k
+			// todo: should give proper error message like `expected type []int, got []int but contain string`
+			// todo: plus location is incorrect
+			if !c.SubType(arrayType, elementType) {
+				log.Fatalf("expected type %s, but got %s at line:%d, column:%d",
+					arrayType, elementType, 99, 99999,
+				)
+			}
+		}
+
+		return ARRAY(arrayType.String())
+
 	default:
-		panic("unreachable")
+		panic("infer::unreachable")
 	}
 
 	return nil
@@ -69,6 +87,10 @@ func (c *Checker) SubType(a, b ast.Type) bool {
 	}
 
 	if IsString(a) && IsString(b) {
+		return true
+	}
+
+	if IsArray(a) && IsArray(b) && a.(Array).Value == b.(Array).Value {
 		return true
 	}
 
