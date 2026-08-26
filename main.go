@@ -8,10 +8,17 @@ import (
 	"kat/parser"
 	"kat/util"
 	"kat/value"
+	"os"
+	"path/filepath"
 )
 
 func main() {
-	source := util.ReadFile("./doc/stdlib.kat")
+	if err := checkUsage(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	source := util.ReadFile(os.Args[1])
 
 	l := lexer.New(source)
 	p := parser.New(l)
@@ -26,5 +33,12 @@ func main() {
 	if err, ok := res.(*value.Error); ok {
 		fmt.Println(err)
 	}
+}
 
+func checkUsage() error {
+	if len(os.Args) != 2 {
+		return fmt.Errorf("usage: %s <file>", filepath.Base(os.Args[0]))
+	}
+
+	return nil
 }
