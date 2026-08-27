@@ -91,19 +91,23 @@ func (l *Lexer) NextToken() token.Token {
 
 	case '/':
 		if l.PeekChar() == '/' {
-			l.NextChar()
-			l.NextChar()
-
-			for l.PeekToken(1).Type != token.EOL &&
-				l.PeekToken(1).Type != token.EOF {
-				t = l.NextToken()
+			// Consume all character untill end of line
+			for l.PeekChar() != '\n' {
+				l.NextChar()
 			}
 
-			l.NextToken()     // consume the EOL or EOF
-			t = l.NextToken() // advance to next token
-		} else {
-			t = l.MakeToken(l.Col, string(ch), token.DIVIDE)
+			l.NextChar() // Consume the EOL or EOF
+			l.NextChar() // Advance to next character
+
+			// If after comment there is empty blank line, consume all blank lines
+			for l.Char() == '\n' {
+				l.NextChar() // Consume the EOL or EOF
+			}
+
+			return l.NextToken()
 		}
+
+		t = l.MakeToken(l.Col, string(ch), token.DIVIDE)
 
 	case '%':
 		t = l.MakeToken(l.Col, string(ch), token.MODULO)

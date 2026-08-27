@@ -2,3 +2,35 @@ import f "fmt"
 
 let name = f.sprintf("hello %s", "sobri kamal")
 f.println(name)
+
+////////////////////
+fn User.setAge(self, age: int) {
+    self.age =  age
+}
+
+fn User.getAge(self): int {
+    return self.age
+}
+
+fn User.info(self) {
+    fmt.Printf("Name is %s, age is %d, job is %s", self.name, self.age, self.job)
+    fmt.Println()
+}
+
+fn say(greet) {
+    fmt.Println(greet)
+}
+
+fn main() {
+    let u: User = User{
+        name: "string",
+        age: 40,
+        job: "engineer",
+        salary: 18900.99
+    }
+
+    let nums: []int = []int{1, 2, 3, 4, 5}
+    let locations: map[string]int = map[string]string{"penang":1, "perlis":2}
+}
+
+main()

@@ -237,7 +237,7 @@ func GetPrecedence(tok Token) int {
 
 /*
 Language features that need to implement type checking
-variable declaration
+constant / variable declaration
 	primitive, array, map
 
 function declaration
