@@ -4,158 +4,122 @@ import (
 	"fmt"
 )
 
-var Precedence = struct {
-	LOWEST      int
-	ASSIGNMENT  int
-	CONDITIONAL int
-	COMPARISON  int
-	SUM         int
-	PRODUCT     int
-	EXPONENT    int
-	PREFIX      int
-	POSTFIX     int
-	EXPR        int
-}{
-	LOWEST:      0,
-	ASSIGNMENT:  1,
-	CONDITIONAL: 2,
-	COMPARISON:  3,
-	SUM:         4,
-	PRODUCT:     5,
-	EXPONENT:    6,
-	PREFIX:      7,
-	POSTFIX:     8,
-	EXPR:        9,
-}
-
-type TokenType string
-
-type Token struct {
-	Row   int
-	Col   int
-	Value string
-	Type  TokenType
-}
-
-func (t Token) String() string {
-	return fmt.Sprintf(
-		"Token{ Line: %d, Col: %d, TokenString: %s, Value: `%s` }",
-		t.Row, t.Col, t.Type, t.Value,
-	)
-}
-
-func (tt TokenType) Str() string {
-	return TokenString[tt]
-}
-
-var TokenString = map[TokenType]string{
-	PLUS:         "+",
-	MINUS:        "-",
-	NEGATE:       "-",
-	BANG:         "!",
-	QUESTION:     "?",
-	MULTIPLY:     "*",
-	DIVIDE:       "/",
-	MODULO:       "%",
-	EQUAL:        "=",
-	LESS:         "<",
-	GREATER:      ">",
-	LBRACKET:     "[",
-	RBRACKET:     "]",
-	LBRACE:       "{",
-	RBRACE:       "}",
-	COLON:        ":",
-	LPAREN:       "(",
-	RPAREN:       ")",
-	COMMA:        ",",
-	SEMICOLON:    ";",
-	DOT:          ".",
-	PLUSPLUS:     "++",
-	MINUSMINUS:   "--",
-	EQUALEQUAL:   "==",
-	GREATEREQUAL: ">=",
-	LESSEQUAL:    "<=",
-	STRING:       "string",
-	INTEGER:      "integer",
-	DOUBLE:       "double",
-	TRUE:         "true",
-	FALSE:        "false",
-	LET:          "let",
-	CONST:        "const",
-	IF:           "if",
-	ELSE:         "else",
-	FOR:          "for",
-	SELF:         "self",
-	IMPORT:       "import",
-	STRUCT:       "struct",
-	FUNCTION:     "function",
-	IDENTIFIER:   "identifier",
-	EOL:          "eol",
-	EOF:          "eof",
-	INVALID:      "invalid",
-}
-
 const (
 	// Single character
-	PLUS      = "PLUS"      // +
-	MINUS     = "MINUS"     // -
-	NEGATE    = "NEGATE"    // -
-	BANG      = "BANG"      // !
-	QUESTION  = "QUESTION"  // ?
-	MULTIPLY  = "MULTIPLY " // *
-	DIVIDE    = "DIVIDE"    // /
-	MODULO    = "MODULO"    // %
-	EQUAL     = "EQUAL"     // =
-	LESS      = "LESS"      // <
-	GREATER   = "GREATER"   // >
-	LBRACKET  = "LBRACKET"  // [
-	RBRACKET  = "RBRACKET"  // ]
-	LBRACE    = "LBRACE"    // {
-	RBRACE    = "RBRACE"    // }
-	COLON     = "COLON"     // :
-	LPAREN    = "LPAREN"    // (
-	RPAREN    = "RPAREN"    // )
-	COMMA     = "COMMA"     // ,
-	SEMICOLON = "SEMICOLON" // ;
-	DOT       = "DOT"       // .
+	PLUS      TokenType = iota // +
+	MINUS                      // -
+	NEGATE                     // -
+	BANG                       // !
+	QUESTION                   // ?
+	MULTIPLY                   // *
+	DIVIDE                     // /
+	MODULO                     // %
+	EQUAL                      // =
+	LESS                       // <
+	GREATER                    // >
+	LBRACKET                   // [
+	RBRACKET                   // ]
+	LBRACE                     // {
+	RBRACE                     // }
+	COLON                      // :
+	LPAREN                     // (
+	RPAREN                     // )
+	COMMA                      // ,
+	SEMICOLON                  // ;
+	DOT                        // .
 
 	// Double character
-	PLUSPLUS     = "PLUSPLUS"     // ++
-	MINUSMINUS   = "MINUSMINUS"   // --
-	EQUALEQUAL   = "EQUALEQUAL"   // ==
-	NOTEQUAL     = "NOTEQUAL"     // ==
-	GREATEREQUAL = "GREATEREQUAL" // >=
-	LESSEQUAL    = "LESSEQUAL"    // <=
-	COMMENT      = "COMMENT"      // //
+	PLUSPLUS     // ++
+	MINUSMINUS   // --
+	EQUALEQUAL   // ==
+	NOTEQUAL     // ==
+	GREATEREQUAL // >=
+	LESSEQUAL    // <=
+	COMMENT      // //
 
 	// Literal
-	STRING  = "STRING"
-	INTEGER = "INTEGER"
-	DOUBLE  = "DOUBLE"
+	STRING
+	INTEGER
+	DOUBLE
 
 	// Keyword
-	TRUE       = "TRUE"       // true
-	FALSE      = "FALSE"      // false
-	LET        = "LET"        // let
-	CONST      = "CONST"      // const
-	IF         = "IF"         // if
-	ELSE       = "ELSE"       // else
-	FOR        = "FOR"        // for
-	SELF       = "SELF"       // self
-	IMPORT     = "IMPORT"     // import
-	STRUCT     = "STRUCT"     // struct
-	FUNCTION   = "FUNCTION"   // fn
-	RETURN     = "RETURN"     // return
-	IDENTIFIER = "IDENTIFIER" // any
+	TRUE       // true
+	FALSE      // false
+	LET        // let
+	CONST      // const
+	IF         // if
+	ELSE       // else
+	FOR        // for
+	SELF       // self
+	IMPORT     // import
+	STRUCT     // struct
+	FUNCTION   // fn
+	RETURN     // return
+	IDENTIFIER // any
 
 	// Special
-	EOL     = "EOL"     // End of line
-	EOF     = "EOF"     // End of file
-	INVALID = "INVALID" // End of file
+	EOL                 // End of line
+	EOF                 // End of file
+	INVALID             // Invalid
+	ANNOTATIONPRIMITIVE // Primitive annotation
+	ANNOTATIONARRAY     // Array annotation
+	ANNOTATIONMAP       // Map annotation
+	ANNOTATIONSTRUCT    // Struct annotation
 )
 
-func Symbol(key string) TokenType {
-	keywords := map[string]TokenType{
+var (
+	TokenString = map[TokenType]string{
+		PLUS:                "+",
+		MINUS:               "-",
+		NEGATE:              "-",
+		BANG:                "!",
+		QUESTION:            "?",
+		MULTIPLY:            "*",
+		DIVIDE:              "/",
+		MODULO:              "%",
+		EQUAL:               "=",
+		LESS:                "<",
+		GREATER:             ">",
+		LBRACKET:            "[",
+		RBRACKET:            "]",
+		LBRACE:              "{",
+		RBRACE:              "}",
+		COLON:               ":",
+		LPAREN:              "(",
+		RPAREN:              ")",
+		COMMA:               ",",
+		SEMICOLON:           ";",
+		DOT:                 ".",
+		PLUSPLUS:            "++",
+		MINUSMINUS:          "--",
+		EQUALEQUAL:          "==",
+		GREATEREQUAL:        ">=",
+		LESSEQUAL:           "<=",
+		STRING:              "string",
+		INTEGER:             "integer",
+		DOUBLE:              "double",
+		TRUE:                "true",
+		FALSE:               "false",
+		LET:                 "let",
+		CONST:               "const",
+		IF:                  "if",
+		ELSE:                "else",
+		FOR:                 "for",
+		SELF:                "self",
+		IMPORT:              "import",
+		STRUCT:              "struct",
+		FUNCTION:            "function",
+		IDENTIFIER:          "identifier",
+		EOL:                 "eol",
+		EOF:                 "eof",
+		INVALID:             "invalid",
+		ANNOTATIONPRIMITIVE: "annotationprimitive",
+		ANNOTATIONARRAY:     "annotationarray",
+		ANNOTATIONMAP:       "annotationmap",
+		ANNOTATIONSTRUCT:    "annotationstruct",
+	}
+
+	Keywords = map[string]TokenType{
 		"true":   TRUE,
 		"false":  FALSE,
 		"let":    LET,
@@ -170,7 +134,59 @@ func Symbol(key string) TokenType {
 		"return": RETURN,
 	}
 
-	keyword, ok := keywords[key]
+	Precedence = struct {
+		LOWEST      int
+		ASSIGNMENT  int
+		CONDITIONAL int
+		COMPARISON  int
+		SUM         int
+		PRODUCT     int
+		EXPONENT    int
+		PREFIX      int
+		POSTFIX     int
+		EXPR        int
+	}{
+		LOWEST:      0,
+		ASSIGNMENT:  1,
+		CONDITIONAL: 2,
+		COMPARISON:  3,
+		SUM:         4,
+		PRODUCT:     5,
+		EXPONENT:    6,
+		PREFIX:      7,
+		POSTFIX:     8,
+		EXPR:        9,
+	}
+)
+
+type (
+	TokenType int
+
+	Token struct {
+		Row   int
+		Col   int
+		Value string
+		Type  TokenType
+	}
+)
+
+func (t Token) String() string {
+	return fmt.Sprintf(
+		"Token{ Line: %d, Col: %d, TokenString: %s, Value: `%s` }",
+		t.Row, t.Col, t.Type, t.Value,
+	)
+}
+
+func (tt TokenType) String() string {
+	if tokenString, ok := TokenString[tt]; ok {
+		return tokenString
+	}
+
+	return TokenString[INVALID]
+}
+
+func Keyword(key string) TokenType {
+	keyword, ok := Keywords[key]
 
 	if ok {
 		return keyword
@@ -218,3 +234,14 @@ func GetPrecedence(tok Token) int {
 
 	return 0
 }
+
+/*
+Language features that need to implement type checking
+variable declaration
+	primitive, array, map
+
+function declaration
+	function arguement, function return
+
+struct declaration
+*/

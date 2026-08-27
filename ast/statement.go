@@ -1,9 +1,10 @@
 package ast
 
 import (
-	"github.com/sanity-io/litter"
 	"kat/token"
 	"regexp"
+
+	"github.com/sanity-io/litter"
 )
 
 // Simulate Tagged Union
@@ -14,7 +15,7 @@ func (s Statement) stmt() {}
 func (s Statement) node() {}
 
 // #######################################################
-// ##################### Node Program#####################😀
+// ##################### Node Program#####################
 // #######################################################
 type NodeProgram struct {
 	Statement
@@ -27,7 +28,7 @@ func (np *NodeProgram) String() string {
 }
 
 // #######################################################
-// ################## Node Modern For Stmt ###############😀
+// ################## Node Modern For Stmt ###############
 // #######################################################
 type NodeModernForStmt struct {
 	Statement
@@ -37,7 +38,7 @@ type NodeModernForStmt struct {
 }
 
 // #######################################################
-// ################# Node Classic For Stmt ###############😀
+// ################# Node Classic For Stmt ###############
 // #######################################################
 type NodeClassicForStmt struct {
 	Statement
@@ -49,7 +50,7 @@ type NodeClassicForStmt struct {
 }
 
 // #######################################################
-// #################### Node Const Stmt ##################😀
+// #################### Node Const Stmt ##################
 // #######################################################
 type NodeConstStmt struct {
 	Statement
@@ -59,7 +60,7 @@ type NodeConstStmt struct {
 }
 
 // #######################################################
-// ################## Node Struct Stmt ###################😀
+// ################## Node Struct Stmt ###################
 // #######################################################
 type NodeStructStmt struct {
 	Statement
@@ -69,7 +70,7 @@ type NodeStructStmt struct {
 }
 
 // #######################################################
-// ################ Node Function Stmt ###################😀
+// ################ Node Function Stmt ###################
 // #######################################################
 type NodeFunctionStmt struct {
 	Statement
@@ -80,7 +81,7 @@ type NodeFunctionStmt struct {
 }
 
 // #######################################################
-// ##################### Node Let Stmt ###################😀
+// ##################### Node Let Stmt ###################
 // #######################################################
 type NodeLetStmt struct {
 	Statement
@@ -90,7 +91,7 @@ type NodeLetStmt struct {
 }
 
 // #######################################################
-// #################### Node Expr Stmt ###################😀
+// #################### Node Expr Stmt ###################
 // #######################################################
 type NodeExprStmt struct {
 	Statement
@@ -98,7 +99,7 @@ type NodeExprStmt struct {
 }
 
 // #######################################################
-// ################# Node conditional stmt ###############😀
+// ################# Node conditional stmt ###############
 // #######################################################
 type NodeConditionalStmt struct {
 	Statement
@@ -109,7 +110,7 @@ type NodeConditionalStmt struct {
 }
 
 // #######################################################
-// #################### Node Return stmt #################😀
+// #################### Node Return stmt #################
 // #######################################################
 type NodeReturnStmt struct {
 	Statement
@@ -118,9 +119,19 @@ type NodeReturnStmt struct {
 }
 
 // #######################################################
-// #################### Node Block stmt ##################😀
+// #################### Node Block stmt ##################
 // #######################################################
 type NodeBlockStmt struct {
 	Statement
 	Body []Stmt
+}
+
+// #######################################################
+// ################### Node Import stmt ##################
+// #######################################################
+type NodeImportStmt struct {
+	Statement
+	Token token.Token
+	Path  Expr
+	Alias Expr
 }

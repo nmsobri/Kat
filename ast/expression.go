@@ -154,12 +154,3 @@ type NodeSelf struct {
 	Token token.Token
 	Name  string
 }
-
-// #######################################################
-// ################### Node Import Expr ##################😀
-// #######################################################
-type NodeImportExpr struct {
-	Expression
-	Token token.Token
-	Path  Expr
-}

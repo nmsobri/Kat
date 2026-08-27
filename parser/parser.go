@@ -51,6 +51,7 @@ func New(lex *lexer.Lexer) *Parser {
 	p.StatementFunctions[token.IF] = p.ParseIfStmt
 	p.StatementFunctions[token.FOR] = p.parseForStmt
 	p.StatementFunctions[token.RETURN] = p.parseReturnStmt
+	p.StatementFunctions[token.IMPORT] = p.ParseImportDecl
 
 	// Register Prefix functions
 	p.PrefixFunctions[token.SELF] = p.ParseSelf
@@ -66,7 +67,6 @@ func New(lex *lexer.Lexer) *Parser {
 	p.PrefixFunctions[token.LBRACE] = p.ParseMapExpr
 	p.PrefixFunctions[token.MINUSMINUS] = p.ParsePrefixExpr
 	p.PrefixFunctions[token.PLUSPLUS] = p.ParsePrefixExpr
-	p.PrefixFunctions[token.IMPORT] = p.ParseImportDecl
 
 	// Register Infix functions
 	p.InfixFunctions[token.PLUS] = p.ParseBinaryExpr
@@ -103,8 +103,8 @@ func (p *Parser) ConsumeToken() token.Token {
 
 func (p *Parser) ExpectToken(tok token.TokenType) token.Token {
 	if p.NextToken.Type != tok {
-		log.Fatalf("Expect next token of type: %s `%s`, got: %s `%s` at line: %d, column:%d\n",
-			tok, tok.Str(), p.NextToken.Type, p.NextToken.Value,
+		log.Fatalf("Expect next token of type: `%s`, got: %s `%s` at line: %d, column:%d\n",
+			tok, p.NextToken.Type, p.NextToken.Value,
 			p.NextToken.Row+1, p.NextToken.Col+1,
 		)
 
@@ -309,17 +309,21 @@ func (p *Parser) ParseConstDecl() ast.Stmt {
 	}
 }
 
-func (p *Parser) ParseImportDecl() ast.Expr {
+func (p *Parser) ParseImportDecl() ast.Stmt {
 	currentToken := p.CurrentToken()
-	p.ExpectToken(token.LPAREN) // consume `(`
+
+	var alias ast.Expr
+
+	if p.PeekToken().Type == token.IDENTIFIER {
+		alias = p.ParseExpression(0)
+	}
 
 	path := p.ParseExpression(token.Precedence.LOWEST)
 
-	p.ExpectToken(token.RPAREN) // consume `)`
-
-	return &ast.NodeImportExpr{
+	return &ast.NodeImportStmt{
 		Token: currentToken,
 		Path:  path,
+		Alias: alias,
 	}
 }
 

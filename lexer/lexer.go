@@ -171,7 +171,7 @@ func (l *Lexer) NextToken() token.Token {
 			col := l.Col
 			unknown := l.MakeIdentifier()
 			symbol := string(unknown)
-			t = l.MakeToken(col, symbol, token.Symbol(symbol))
+			t = l.MakeToken(col, symbol, token.Keyword(symbol))
 
 		} else {
 			col := l.Col

@@ -97,14 +97,14 @@ func (e *Evaluator) Eval(astNode ast.Node, env *environment.Environment) value.V
 	case *ast.NodeClassicForStmt:
 		return e.EvalClassicForStmt(stmt, env)
 
+	case *ast.NodeImportStmt:
+		return e.EvalImportStmt(stmt, env)
+
 	case *ast.NodePostfixExpr:
 		return e.EvalPostfixExpr(stmt, env)
 
 	case *ast.NodePrefixExpr:
 		return e.EvalPrefixExpr(stmt, env)
-
-	case *ast.NodeImportExpr:
-		return e.EvalImportExpr(stmt, env)
 
 	case *ast.NodeArrayExpr:
 		return e.EvalArrayExpr(stmt, env)
@@ -206,11 +206,17 @@ func (e *Evaluator) EvalArrayExpr(stmt *ast.NodeArrayExpr, env *environment.Envi
 	return &value.Array{values}
 }
 
-func (e *Evaluator) EvalImportExpr(stmt *ast.NodeImportExpr, env *environment.Environment) value.Value {
+func (e *Evaluator) EvalImportStmt(stmt *ast.NodeImportStmt, env *environment.Environment) value.Value {
 	path := e.Eval(stmt.Path, env)
 
 	if e.Error(path) {
 		return path
+	}
+
+	var alias = path.(*value.String).Value
+
+	if stmt.Alias != nil {
+		alias = stmt.Alias.(*ast.NodeIdentifier).Name
 	}
 
 	pkg, ok := Pkgs.Map[path.(*value.String).Value]
@@ -220,7 +226,9 @@ func (e *Evaluator) EvalImportExpr(stmt *ast.NodeImportExpr, env *environment.En
 		return &value.Error{msg}
 	}
 
-	return &value.Module{pkg}
+	module := &value.Module{pkg}
+	env.Set(alias, module)
+	return module
 }
 
 func (e *Evaluator) EvalPrefixExpr(stmt *ast.NodePrefixExpr, env *environment.Environment) value.Value {
@@ -615,7 +623,7 @@ func (e *Evaluator) EvalFunctionCall(stmt *ast.NodeFunctionCall, env *environmen
 			return e.Eval(valFn.Body, fnEnv)
 
 		case *value.Module:
-			valFn, ok := receiverInstance.(*value.Module).Value.(*value.Map[value.Value]).Map[identifierName]
+			valFn, ok := receiveryType.Value.(*value.Map[value.Value]).Map[identifierName]
 
 			if !ok {
 				msg := fmt.Sprintf("Symbol %s is not found", identifier.(*value.String).Value)
